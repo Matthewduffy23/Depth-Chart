@@ -129,49 +129,49 @@ FORMATIONS:dict[str,list[dict]]={
     "4-2-3-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"LW",  "label":"LW",  "x":13,"y":25, "accepts":["LW","AM"],        "side":"L"},
-        {"id":"AM",  "label":"AM",  "x":50,"y":24, "accepts":["AM"],             "side":"N"},
+        {"id":"AM",  "label":"AM",  "x":50,"y":27, "accepts":["AM"],             "side":"N"},
         {"id":"RW",  "label":"RW",  "x":87,"y":25, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"DM1", "label":"DM",  "x":35,"y":43, "accepts":["DM","CM"],        "side":"L"},
-        {"id":"DM2", "label":"DM",  "x":65,"y":43, "accepts":["DM","CM"],        "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":63, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"DM",  "label":"DM",  "x":35,"y":43, "accepts":["DM","CM"],        "side":"L"},
+        {"id":"CM",  "label":"CM",  "x":65,"y":43, "accepts":["CM","DM"],        "side":"R"},
+        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":63, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-3-3":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW"],             "side":"L"},
         {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW"],             "side":"R"},
-        {"id":"CM",  "label":"CM",  "x":30,"y":36, "accepts":["CM","AM"],        "side":"L"},
-        {"id":"AM",  "label":"AM",  "x":70,"y":36, "accepts":["AM","CM"],        "side":"R"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":46, "accepts":["DM","CM"],        "side":"N"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":63, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"CM",  "label":"CM",  "x":30,"y":36, "accepts":["CM"],             "side":"L"},
+        {"id":"AM",  "label":"AM",  "x":70,"y":36, "accepts":["AM"],             "side":"R"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":46, "accepts":["DM"],             "side":"N"},
+        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":63, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-4-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
         {"id":"LW",  "label":"LW",  "x":9, "y":34, "accepts":["LW","AM"],        "side":"L"},
-        {"id":"CM1", "label":"CM",  "x":34,"y":38, "accepts":["CM","DM","AM"],   "side":"L"},
-        {"id":"CM2", "label":"CM",  "x":66,"y":38, "accepts":["CM","DM","AM"],   "side":"R"},
+        {"id":"CM1", "label":"CM",  "x":34,"y":38, "accepts":["CM"],             "side":"L"},
+        {"id":"CM2", "label":"CM",  "x":66,"y":38, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":63, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":63, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "3-5-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
         {"id":"LWB", "label":"LWB", "x":9, "y":32, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
-        {"id":"AM",  "label":"AM",  "x":30,"y":36, "accepts":["AM","CM"],        "side":"L"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM","CM"],        "side":"N"},
-        {"id":"CM",  "label":"CM",  "x":70,"y":36, "accepts":["CM","AM"],        "side":"R"},
+        {"id":"AM",  "label":"AM",  "x":30,"y":36, "accepts":["AM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM"],             "side":"N"},
+        {"id":"CM",  "label":"CM",  "x":70,"y":36, "accepts":["CM"],             "side":"R"},
         {"id":"RWB", "label":"RWB", "x":91,"y":32, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
@@ -183,8 +183,8 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"ST2", "label":"ST",  "x":65,"y":8,  "accepts":["ST"],             "side":"R"},
         {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N"},
         {"id":"LWB", "label":"LWB", "x":9, "y":35, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
-        {"id":"CM1", "label":"CM",  "x":34,"y":39, "accepts":["CM","DM"],        "side":"L"},
-        {"id":"CM2", "label":"CM",  "x":66,"y":39, "accepts":["CM","DM"],        "side":"R"},
+        {"id":"CM1", "label":"CM",  "x":34,"y":39, "accepts":["CM"],             "side":"L"},
+        {"id":"CM2", "label":"CM",  "x":66,"y":39, "accepts":["CM"],             "side":"R"},
         {"id":"RWB", "label":"RWB", "x":91,"y":35, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":61, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":65, "accepts":["CB","LCB","RCB"], "side":"N"},
@@ -194,27 +194,27 @@ FORMATIONS:dict[str,list[dict]]={
     "4-5-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"LW",  "label":"LW",  "x":9, "y":25, "accepts":["LW"],             "side":"L"},
-        {"id":"CM1", "label":"CM",  "x":30,"y":33, "accepts":["CM","DM"],        "side":"L"},
+        {"id":"CM1", "label":"CM",  "x":30,"y":33, "accepts":["CM"],             "side":"L"},
         {"id":"AM",  "label":"AM",  "x":50,"y":25, "accepts":["AM"],             "side":"N"},
-        {"id":"CM2", "label":"CM",  "x":70,"y":33, "accepts":["CM","DM"],        "side":"R"},
+        {"id":"CM2", "label":"CM",  "x":70,"y":33, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":25, "accepts":["RW"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":63, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":63, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-1-4-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"LW",  "label":"LW",  "x":9, "y":26, "accepts":["LW"],             "side":"L"},
-        {"id":"AM",  "label":"AM",  "x":30,"y":33, "accepts":["AM","CM"],        "side":"L"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":36, "accepts":["DM","CM"],        "side":"N"},
-        {"id":"CM",  "label":"CM",  "x":70,"y":33, "accepts":["CM","AM"],        "side":"R"},
+        {"id":"AM",  "label":"AM",  "x":30,"y":33, "accepts":["AM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":36, "accepts":["DM"],             "side":"N"},
+        {"id":"CM",  "label":"CM",  "x":70,"y":33, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":26, "accepts":["RW"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":63, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":63, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
 }
@@ -501,24 +501,27 @@ def render_pitch(
                       ) if (show_positions and all_pos) else ""
             rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                      else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
-            rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};'
+            mt="margin-top:5px;" if i>0 else ""
+            rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
                    f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
                    f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
         if not ps:
             rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
-        # Edge alignment: push left-edge nodes right, right-edge nodes left
         sx=float(slot.get("x",50))
-        if sx<20:   # left edge - anchor left side so text goes rightward
-            align="left"
-            transform="translate(-8px,-50%)"
-        elif sx>80: # right edge - anchor right side so text goes leftward
-            align="right"
-            transform="translate(calc(-100% + 8px),-50%)"
-        else:       # centre - standard centering
-            align="center"
-            transform="translate(-50%,-50%)"
+        is_edge=(sx<20 or sx>80)
+        if canva:
+            # Canva: generous width, text-align toward pitch centre
+            mw="160px"; mxw="220px"
+            talign="left" if sx<20 else ("right" if sx>80 else "center")
+        else:
+            # Portrait: edge nodes get a max-width cap so very long names wrap
+            # naturally; short names (J. Key) are never affected since they fit fine.
+            mw="80px"
+            mxw="115px" if is_edge else "none"
+            talign="center"
         return (f'<div style="position:absolute;{pos_style}'
-                f'transform:{transform};text-align:{align};min-width:{"150px" if canva else "80px"};z-index:10;">'
+                f'transform:translate(-50%,-50%);text-align:{talign};'
+                f'min-width:{mw};max-width:{mxw};z-index:10;">'
                 f'{badge}<div>{rows}</div></div>')
 
     # ── legend text ───────────────────────────────────────────────────────────
@@ -531,33 +534,77 @@ def render_pitch(
 
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     if canva:
-        bsz="26px"; nsz="24px"; ssz="16px"; rsz="14px"
-        nodes=""
-        for slot in slots:
+        # Font sizes: +4 from portrait base
+        bsz="19px"; nsz="18px"; ssz="13px"; rsz="12px"
+
+        def make_canva_node(slot)->str:
             px,py=canva_slot_px(float(slot["x"]),float(slot["y"]))
-            nodes+=make_node(slot,f'left:{px}px;top:{py}px;',bsz,nsz,ssz,rsz)
+            ps_all=slot_map.get(slot["id"],[])
+            ps=ps_all[:1] if xi_only else ps_all
+            # Badge
+            badge=(f'<div style="display:inline-block;padding:3px 10px;'
+                   f'border:2px solid #ef4444;color:#ef4444;font-size:{bsz};'
+                   f'font-weight:900;letter-spacing:.1em;margin-bottom:5px;'
+                   f'background:rgba(10,15,28,.97);">{slot["label"]}</div>')
+            rows=""
+            for i,p in enumerate(ps):
+                yrs=contract_years(p.get("Contract expires",""))
+                yr_str=f"+{yrs}" if yrs>=0 else "+?"
+                loan=is_loan(p); fw="800" if i==0 else "500"
+                col="#ffffff" if white_names else player_css_color(yrs,loan)
+                multi=" 🔁" if _multi_role(p.get("Position","")) else ""
+                oop_s=f" ({p['_primary_pos']})" if p.get('_oop') else ''
+                if loan:
+                    suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
+                else:
+                    suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
+                stat_parts=[]
+                if show_mins:   stat_parts.append(f"{int(float(p.get('Minutes played') or 0))}′")
+                if show_goals:
+                    g=float(p.get("Goals") or 0)
+                    if g>0: stat_parts.append(f"{int(g)}⚽")
+                if show_assists:
+                    a=float(p.get("Assists") or 0)
+                    if a>0: stat_parts.append(f"{int(a)}🅰")
+                stat_html=(f'<div style="color:#fff;font-size:{ssz};line-height:1.2;opacity:.85;margin-top:1px;">'
+                           f'{" ".join(stat_parts)}</div>') if stat_parts else ""
+                mt="margin-top:7px;" if i>0 else ""
+                rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
+                         else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
+                rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
+                       f'white-space:nowrap;text-shadow:0 0 10px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
+                       f'{p["Player"]} {suffix}</div>{stat_html}{rs_html}')
+            if not ps:
+                rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
+            # Edge alignment toward pitch centre
+            sx=float(slot.get("x",50))
+            talign="left" if sx<20 else ("right" if sx>80 else "center")
+            # top-anchored: translate(-50%,0) so node grows downward from anchor point
+            return (f'<div style="position:absolute;left:{px}px;top:{py}px;'
+                    f'transform:translate(-50%,-15px);text-align:{talign};'
+                    f'min-width:160px;max-width:230px;z-index:10;">'
+                    f'{badge}<div style="white-space:nowrap;">{rows}</div></div>')
 
-        header=(f'<div style="position:absolute;top:8px;left:40px;right:40px;'
-                f'display:flex;justify-content:space-between;align-items:center;z-index:20;">'
-                f'<div style="font-weight:900;font-size:32px;letter-spacing:.08em;'
-                f'text-transform:uppercase;">{team} Squad Depth</div>'
-                f'<div style="font-size:20px;color:#6b7280;letter-spacing:.08em;">'
-                f'{league} &nbsp;·&nbsp; {formation}</div></div>')
+        nodes="".join(make_canva_node(s) for s in slots)
 
+        # No title — just league · formation top-right
+        info=(f'<div style="position:absolute;top:12px;right:32px;'
+              f'font-size:16px;color:#4b5563;letter-spacing:.06em;z-index:20;">'
+              f'{league}&nbsp;&nbsp;·&nbsp;&nbsp;{formation}</div>')
 
-        legend=(f'<div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;'
-                f'font-size:16px;color:#6b7280;z-index:20;">'
-                f'Name + contract years{legend_text()} \u00b7 \U0001f501=4+ positions'
-                f'&nbsp;&nbsp;&nbsp;'
-                f'<span style="color:#fff;font-weight:700;">Contracted</span>&nbsp;&nbsp;'
-                f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&nbsp;&nbsp;'
-                f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&nbsp;&nbsp;'
+        legend=(f'<div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;'
+                f'font-size:14px;color:#6b7280;z-index:20;letter-spacing:.03em;">'
+                f'Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions'
+                f'&emsp;'
+                f'<span style="color:#fff;font-weight:700;">Contracted</span>&ensp;'
+                f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
+                f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&ensp;'
                 f'<span style="color:#22c55e;font-weight:700;">On Loan</span></div>')
 
         return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
                 f'background:{BG};width:{CANVA_W}px;height:{CANVA_H}px;position:relative;'
                 f'overflow:hidden;">'
-                f'{canva_landscape_svg()}{header}{nodes}{legend}</div>')
+                f'{canva_landscape_svg()}{info}{nodes}{legend}</div>')
 
     # ── PORTRAIT mode ─────────────────────────────────────────────────────────
     bsz="15px"; nsz="14px"; ssz="9px"; rsz="8px"
