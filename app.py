@@ -131,8 +131,8 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"LW",  "label":"LW",  "x":13,"y":25, "accepts":["LW","AM"],        "side":"L"},
         {"id":"AM",  "label":"AM",  "x":50,"y":27, "accepts":["AM"],             "side":"N"},
         {"id":"RW",  "label":"RW",  "x":87,"y":25, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"DM",  "label":"DM",  "x":35,"y":43, "accepts":["DM","CM"],        "side":"L"},
-        {"id":"CM",  "label":"CM",  "x":65,"y":43, "accepts":["CM","DM"],        "side":"R"},
+        {"id":"DM",  "label":"DM",  "x":35,"y":43, "accepts":["DM"],             "side":"L"},
+        {"id":"CM",  "label":"CM",  "x":65,"y":43, "accepts":["CM"],             "side":"R"},
         {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
@@ -533,24 +533,70 @@ def render_pitch(
         return s
 
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
+    # Portrait pitch centred in 1920×1080, scaled up.
+    # Badge style: gray rounded rect (matching reference image).
+    # Larger fonts, generous spacing, no title.
     if canva:
-        # Font sizes: +4 from portrait base
-        bsz="19px"; nsz="18px"; ssz="13px"; rsz="12px"
+        # Canva pitch dimensions — portrait pitch centred in 1920×1080
+        # Pitch sits in centre, ~900px wide × ~1020px tall (aspect ~1:1.42)
+        CPW2=900; CPH2=round(CPW2*1.42)  # ~1278px — too tall, scale down
+        # Fit height to slide with margins top/bottom for legend
+        CPH2=960; CPW2=round(CPH2/1.42)  # ~676px wide
+        # Centre on slide
+        CP_LEFT=round((CANVA_W-CPW2)/2)  # ~622px
+        CP_TOP=round((CANVA_H-CPH2)/2)   # ~60px
 
-        def make_canva_node(slot)->str:
-            px,py=canva_slot_px(float(slot["x"]),float(slot["y"]))
+        bsz="20px"; nsz="19px"; ssz="13px"; rsz="11px"
+
+        def canva_portrait_svg2()->str:
+            """Same proportional pitch as portrait but scaled to CPW2×CPH2"""
+            ox,oy=CP_LEFT,CP_TOP; pw,ph=CPW2,CPH2
+            # Scale the viewBox coords (0-100 x, 0-142 y) to px
+            sx=pw/100.0; sy=ph/142.0
+            def vx(x): return round(ox+x*sx)
+            def vy(y): return round(oy+y*sy)
+            cx2=vx(50); cy2=vy(71)
+            cr=round(10*sx)  # centre circle radius
+            return (
+                f'<svg style="position:absolute;left:0;top:0;width:{CANVA_W}px;height:{CANVA_H}px;'
+                f'pointer-events:none;z-index:1;" viewBox="0 0 {CANVA_W} {CANVA_H}">'
+                # pitch background
+                f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="#111827" opacity=".9"/>'
+                # outer border
+                f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="none" stroke="#374151" stroke-width="2"/>'
+                # halfway line
+                f'<line x1="{vx(2)}" y1="{vy(71)}" x2="{vx(98)}" y2="{vy(71)}" stroke="#374151" stroke-width="1.2"/>'
+                # centre circle
+                f'<circle cx="{cx2}" cy="{cy2}" r="{cr}" fill="none" stroke="#374151" stroke-width="1.2"/>'
+                f'<circle cx="{cx2}" cy="{cy2}" r="4" fill="#374151"/>'
+                # top pen area
+                f'<rect x="{vx(22)}" y="{vy(2)}" width="{round(56*sx)}" height="{round(18*sy)}" fill="none" stroke="#374151" stroke-width="1.2"/>'
+                f'<rect x="{vx(36)}" y="{vy(2)}" width="{round(28*sx)}" height="{round(7*sy)}"  fill="none" stroke="#374151" stroke-width=".8"/>'
+                # bottom pen area
+                f'<rect x="{vx(22)}" y="{vy(122)}" width="{round(56*sx)}" height="{round(18*sy)}" fill="none" stroke="#374151" stroke-width="1.2"/>'
+                f'<rect x="{vx(36)}" y="{vy(133)}" width="{round(28*sx)}" height="{round(7*sy)}"  fill="none" stroke="#374151" stroke-width=".8"/>'
+                f'</svg>'
+            )
+
+        def make_canva_node2(slot)->str:
+            # Convert slot % position to absolute px on the centred portrait pitch
+            sx2=float(slot["x"]); sy2=float(slot["y"])
+            px=round(CP_LEFT + sx2/100.0*CPW2)
+            py=round(CP_TOP  + sy2/100.0*CPH2)
+
             ps_all=slot_map.get(slot["id"],[])
             ps=ps_all[:1] if xi_only else ps_all
-            # Badge
-            badge=(f'<div style="display:inline-block;padding:3px 10px;'
-                   f'border:2px solid #ef4444;color:#ef4444;font-size:{bsz};'
-                   f'font-weight:900;letter-spacing:.1em;margin-bottom:5px;'
-                   f'background:rgba(10,15,28,.97);">{slot["label"]}</div>')
+
+            # Badge: gray rounded rect style (like reference image)
+            badge=(f'<div style="display:inline-block;padding:4px 14px;'
+                   f'border-radius:6px;background:#374151;'
+                   f'color:#ffffff;font-size:{bsz};font-weight:900;letter-spacing:.08em;'
+                   f'margin-bottom:6px;">{slot["label"]}</div>')
             rows=""
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
-                loan=is_loan(p); fw="800" if i==0 else "500"
+                loan=is_loan(p); fw="700" if i==0 else "400"
                 col="#ffffff" if white_names else player_css_color(yrs,loan)
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 oop_s=f" ({p['_primary_pos']})" if p.get('_oop') else ''
@@ -558,53 +604,46 @@ def render_pitch(
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
-                stat_parts=[]
-                if show_mins:   stat_parts.append(f"{int(float(p.get('Minutes played') or 0))}′")
-                if show_goals:
-                    g=float(p.get("Goals") or 0)
-                    if g>0: stat_parts.append(f"{int(g)}⚽")
-                if show_assists:
-                    a=float(p.get("Assists") or 0)
-                    if a>0: stat_parts.append(f"{int(a)}🅰")
-                stat_html=(f'<div style="color:#fff;font-size:{ssz};line-height:1.2;opacity:.85;margin-top:1px;">'
-                           f'{" ".join(stat_parts)}</div>') if stat_parts else ""
-                mt="margin-top:7px;" if i>0 else ""
+                mt="margin-top:6px;" if i>0 else ""
                 rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
-                rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
-                       f'white-space:nowrap;text-shadow:0 0 10px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
-                       f'{p["Player"]} {suffix}</div>{stat_html}{rs_html}')
+                rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
+                       f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,.9);">'
+                       f'{p["Player"]}{suffix}</div>{rs_html}')
             if not ps:
-                rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
-            # Edge alignment toward pitch centre
-            sx=float(slot.get("x",50))
-            talign="left" if sx<20 else ("right" if sx>80 else "center")
-            # top-anchored: translate(-50%,0) so node grows downward from anchor point
+                rows=f'<div style="color:#374151;font-size:{ssz};">&#8212;</div>'
+
+            # Edge alignment
+            talign="left" if sx2<20 else ("right" if sx2>80 else "center")
+            mxw="240px"
             return (f'<div style="position:absolute;left:{px}px;top:{py}px;'
-                    f'transform:translate(-50%,-15px);text-align:{talign};'
-                    f'min-width:160px;max-width:230px;z-index:10;">'
-                    f'{badge}<div style="white-space:nowrap;">{rows}</div></div>')
+                    f'transform:translate(-50%,-50%);text-align:{talign};'
+                    f'min-width:170px;max-width:{mxw};z-index:10;">'
+                    f'{badge}<div>{rows}</div></div>')
 
-        nodes="".join(make_canva_node(s) for s in slots)
+        nodes="".join(make_canva_node2(s) for s in slots)
 
-        # No title — just league · formation top-right
-        info=(f'<div style="position:absolute;top:12px;right:32px;'
-              f'font-size:16px;color:#4b5563;letter-spacing:.06em;z-index:20;">'
-              f'{league}&nbsp;&nbsp;·&nbsp;&nbsp;{formation}</div>')
-
-        legend=(f'<div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;'
-                f'font-size:14px;color:#6b7280;z-index:20;letter-spacing:.03em;">'
-                f'Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions'
-                f'&emsp;'
-                f'<span style="color:#fff;font-weight:700;">Contracted</span>&ensp;'
-                f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
+        # Header bar: how-to-read + legend (matching reference image top bar style)
+        header=(f'<div style="position:absolute;top:14px;left:30px;right:30px;'
+                f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
+                f'font-size:14px;color:#6b7280;letter-spacing:.04em;">'
+                f'<span>Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions</span>'
+                f'<span>'
+                f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
                 f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&ensp;'
-                f'<span style="color:#22c55e;font-weight:700;">On Loan</span></div>')
+                f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
+                f'<span style="color:#22c55e;font-weight:700;">On Loan</span>'
+                f'</span></div>')
+
+        # Formation label bottom-right
+        formation_lbl=(f'<div style="position:absolute;bottom:14px;right:30px;'
+                       f'font-size:16px;color:#4b5563;letter-spacing:.06em;z-index:20;">'
+                       f'{league}&nbsp;·&nbsp;{formation}</div>')
 
         return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
                 f'background:{BG};width:{CANVA_W}px;height:{CANVA_H}px;position:relative;'
                 f'overflow:hidden;">'
-                f'{canva_landscape_svg()}{info}{nodes}{legend}</div>')
+                f'{canva_portrait_svg2()}{header}{nodes}{formation_lbl}</div>')
 
     # ── PORTRAIT mode ─────────────────────────────────────────────────────────
     bsz="15px"; nsz="14px"; ssz="9px"; rsz="8px"
