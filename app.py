@@ -1,9 +1,9 @@
 """
-Squad Depth Chart — v7
-pip install streamlit pandas numpy pillow
+Squad Depth Chart — v8
+pip install streamlit pandas numpy
 streamlit run app.py
 """
-import re, io, base64
+import re
 from datetime import date
 import numpy as np
 import pandas as pd
@@ -24,7 +24,6 @@ section[data-testid="stSidebar"] textarea{background:#0d1424!important;border:1p
 div[data-baseweb="select"]*{background:#0d1424!important;color:#fff!important}
 div[data-baseweb="popover"]*{background:#0d1424!important;color:#fff!important}
 .stTextInput>div>div>input,.stNumberInput input{background:#0d1424!important;border:1px solid #1e2d4a!important;color:#fff!important}
-/* #7: white bg buttons → BLACK text */
 .stButton>button{background:#ffffff!important;color:#000000!important;font-weight:700!important;
   letter-spacing:.06em!important;text-transform:uppercase!important;border:none!important;
   font-family:'Montserrat',sans-serif!important;font-size:11px!important;border-radius:2px!important}
@@ -124,13 +123,8 @@ def _canon(pos:str)->str: return CANONICAL.get(_tok(pos),"CM")
 def _side(pos:str)->str:  return SIDE_PREF.get(_tok(pos),"N")
 def _role_key(pos:str)->str: return ROLE_KEY_MAP.get(_tok(pos),"ATT")
 def _all_toks(pos:str)->list: return [t.strip().upper() for t in str(pos).split(",") if t.strip()]
-# #1: emoji at 4+ positions
 def _multi_role(pos:str)->bool: return len(_all_toks(pos))>=4
 
-# ── Formations ─────────────────────────────────────────────────────────────────
-# Portrait coords: x=left-right%, y=top-bottom% (y=9=attack top, y=84=GK bottom)
-# #8: 4-3-3: CM(L,y=36) + AM(R,y=36) ABOVE DM(centre,y=46)
-# #8: 3-5-2: AM(L,y=36) + AM(R,y=36) ABOVE DM(centre,y=46)
 FORMATIONS:dict[str,list[dict]]={
     "4-2-3-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
@@ -227,22 +221,6 @@ FORMATIONS:dict[str,list[dict]]={
 
 PITCH_ORDER=["GK","LCB","CB","RCB","LB","RB","LWB","RWB","DM","CM","AM","LW","RW","ST"]
 
-# ── Landscape: convert portrait % coords to fixed pixel coords (1920×1080)
-# Pitch area: 1800×880px, offset (60, 100) within 1920×1080
-# GK(portrait y=84) → landscape left (small lx); ST(y=9) → landscape right
-CANVA_W,CANVA_H = 1920,1080
-PITCH_PX_W,PITCH_PX_H = 1800,840
-PITCH_PX_X,PITCH_PX_Y = 60,120   # pitch offset within canva div
-CANVA_Y_MIN,CANVA_Y_MAX = 7.0,87.0
-
-def landscape_px(ox:float,oy:float)->tuple[int,int]:
-    """Portrait % → landscape absolute pixel coords within 1920×1080"""
-    lx_pct=95-(oy-CANVA_Y_MIN)/(CANVA_Y_MAX-CANVA_Y_MIN)*90
-    ly_pct=ox
-    px=PITCH_PX_X+lx_pct/100*PITCH_PX_W
-    py=PITCH_PX_Y+ly_pct/100*PITCH_PX_H
-    return round(px),round(py)
-
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def contract_years(s)->int:
     s=str(s or "").strip()
@@ -271,7 +249,6 @@ def score_to_color(v:float)->str:
         t=(v-50)/50; r=int(234+(34-234)*t); g=int(179+(197-179)*t); b=int(8+(94-8)*t)
     return f"rgb({r},{g},{b})"
 
-# ── Role scores ────────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def compute_role_scores(df:pd.DataFrame)->pd.DataFrame:
     df=df.copy()
@@ -302,7 +279,6 @@ def compute_role_scores(df:pd.DataFrame)->pd.DataFrame:
                     if vals: df.at[idx,col_out]=float(np.average(vals,weights=wts))
     return df
 
-# ── Player assignment ──────────────────────────────────────────────────────────
 def assign_players(players:list,formation_key:str)->tuple[dict,list]:
     slots=FORMATIONS.get(formation_key,FORMATIONS["4-2-3-1"])
     by_label:dict[str,list]={}
@@ -380,8 +356,8 @@ def all_roles_html(player,df_sc,fs="8px"):
     for rn,sc in sorted(scores.items(),key=lambda x:-x[1]):
         sc_col=score_to_color(sc); is_b=rn==best
         lines.append(
-            f'<div style="display:flex;justify-content:space-between;gap:5px;font-size:{fs};line-height:1.5;">'
-            f'<span style="color:{sc_col if is_b else "#6b7280"};font-weight:{"700" if is_b else "400"};">{rn}</span>'
+            f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;">'
+            f'<span style="color:{sc_col if is_b else "#4b5563"};font-weight:{"700" if is_b else "400"};">{rn}</span>'
             f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};">{int(sc)}</span></div>')
     return f'<div style="margin-top:2px;">{"".join(lines)}</div>'
 
@@ -396,36 +372,86 @@ def best_role_html(player,df_sc,fs="8px"):
         if isinstance(v,(int,float)) and not np.isnan(float(v)): scores[rn]=float(v)
     if not scores: return ""
     best=max(scores,key=scores.get); sc=scores[best]; sc_col=score_to_color(sc)
-    return (f'<div style="font-size:{fs};line-height:1.5;margin-top:2px;">'
-            f'<span style="color:#6b7280;">{best} </span>'
+    return (f'<div style="font-size:{fs};line-height:1.4;margin-top:2px;">'
+            f'<span style="color:#4b5563;">{best} </span>'
             f'<span style="color:{sc_col};font-weight:700;">{int(sc)}</span></div>')
 
-# ── SVG lines: #2 more visible (near-white stroke) ────────────────────────────
+# ── SVG pitch lines — dimmed so text always wins ──────────────────────────────
+# Opacity 0.18 so pitch outline is visible as a guide but never overpowers text
 PORTRAIT_SVG="""
-  <rect  x="2"   y="2"     width="96" height="138" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
-  <line  x1="2"  y1="71"   x2="98"   y2="71"      stroke="#9ca3af" stroke-width=".8"/>
-  <circle cx="50" cy="71" r="10"                   fill="none" stroke="#9ca3af" stroke-width=".8"/>
-  <circle cx="50" cy="71" r="1.2"                  fill="#9ca3af"/>
-  <rect  x="22"  y="2"     width="56" height="18"  fill="none" stroke="#9ca3af" stroke-width=".8"/>
-  <rect  x="36"  y="2"     width="28" height="7"   fill="none" stroke="#9ca3af" stroke-width=".6"/>
-  <circle cx="50" cy="14" r=".9"                   fill="#9ca3af"/>
-  <rect  x="22"  y="122"   width="56" height="18"  fill="none" stroke="#9ca3af" stroke-width=".8"/>
-  <rect  x="36"  y="133"   width="28" height="7"   fill="none" stroke="#9ca3af" stroke-width=".6"/>
-  <circle cx="50" cy="126" r=".9"                   fill="#9ca3af"/>"""
+  <rect  x="2"   y="2"     width="96" height="138" fill="none" stroke="#9ca3af" stroke-width="1.2" opacity=".18"/>
+  <line  x1="2"  y1="71"   x2="98"   y2="71"      stroke="#9ca3af" stroke-width=".8"  opacity=".18"/>
+  <circle cx="50" cy="71" r="10"                   fill="none" stroke="#9ca3af" stroke-width=".8"  opacity=".18"/>
+  <circle cx="50" cy="71" r="1.2"                  fill="#9ca3af" opacity=".18"/>
+  <rect  x="22"  y="2"     width="56" height="18"  fill="none" stroke="#9ca3af" stroke-width=".8"  opacity=".18"/>
+  <rect  x="36"  y="2"     width="28" height="7"   fill="none" stroke="#9ca3af" stroke-width=".6"  opacity=".18"/>
+  <circle cx="50" cy="14" r=".9"                   fill="#9ca3af" opacity=".18"/>
+  <rect  x="22"  y="122"   width="56" height="18"  fill="none" stroke="#9ca3af" stroke-width=".8"  opacity=".18"/>
+  <rect  x="36"  y="133"   width="28" height="7"   fill="none" stroke="#9ca3af" stroke-width=".6"  opacity=".18"/>
+  <circle cx="50" cy="126" r=".9"                  fill="#9ca3af" opacity=".18"/>"""
 
-# Landscape SVG: pitch runs left (GK) to right (ST), standard football landscape
-# viewBox="0 0 142 100" matches the div's aspect ratio approach
-LANDSCAPE_SVG="""
-  <rect  x="2"   y="2"     width="138" height="96" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
-  <line  x1="71" y1="2"    x2="71"    y2="98"     stroke="#9ca3af" stroke-width=".8"/>
-  <circle cx="71" cy="50" r="10"                   fill="none" stroke="#9ca3af" stroke-width=".8"/>
-  <circle cx="71" cy="50" r="1.2"                  fill="#9ca3af"/>
-  <rect  x="2"   y="22"    width="18"  height="56" fill="none" stroke="#9ca3af" stroke-width=".8"/>
-  <rect  x="2"   y="36"    width="7"   height="28" fill="none" stroke="#9ca3af" stroke-width=".6"/>
-  <circle cx="13" cy="50" r=".9"                   fill="#9ca3af"/>
-  <rect  x="122" y="22"    width="18"  height="56" fill="none" stroke="#9ca3af" stroke-width=".8"/>
-  <rect  x="133" y="36"    width="7"   height="28" fill="none" stroke="#9ca3af" stroke-width=".6"/>
-  <circle cx="129" cy="50" r=".9"                  fill="#9ca3af"/>"""
+# ── Canva landscape layout constants ─────────────────────────────────────────
+# 1920×1080 slide: portrait pitch centred, players read GK→ST left to right
+# Pitch sits in horizontal centre, rotated 90° to landscape
+# We use a PORTRAIT pitch in the centre of the slide (narrower, taller),
+# with GK at bottom and ST at top, matching Image 3 template style
+# Players are arranged with depth info flanking the pitch
+
+# For the Canva slide we render a landscape SVG pitch occupying most of the slide:
+# Pitch block: 1520px wide × 870px tall, centred in 1920×1080
+CANVA_W, CANVA_H = 1920, 1080
+# Pitch draw area within Canva (GK on left, ST on right)
+CPX, CPY = 100, 90      # top-left of pitch
+CPW, CPH = 1720, 860    # pitch width × height
+# penalty area proportions
+CP_PAW = round(CPW * 0.12)  # penalty area width
+CP_PAH = round(CPH * 0.38)
+CP_GAW = round(CPW * 0.04)
+CP_GAH = round(CPH * 0.20)
+CP_CR  = round(min(CPW,CPH) * 0.07)  # centre circle radius
+
+def canva_landscape_svg()->str:
+    """Landscape pitch SVG for 1920×1080 canvas"""
+    ox,oy,pw,ph=CPX,CPY,CPW,CPH
+    pa_y=oy+round((ph-CP_PAH)/2); ga_y=oy+round((ph-CP_GAH)/2)
+    cx=ox+pw//2; cy=oy+ph//2
+    return (
+        f'<svg style="position:absolute;left:0;top:0;width:{CANVA_W}px;height:{CANVA_H}px;'
+        f'pointer-events:none;z-index:1;" viewBox="0 0 {CANVA_W} {CANVA_H}">'
+        # pitch fill - subtle green tint
+        f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="#0d1820" opacity=".6"/>'
+        # outer border
+        f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="none" stroke="#374151" stroke-width="2"/>'
+        # halfway line
+        f'<line x1="{cx}" y1="{oy}" x2="{cx}" y2="{oy+ph}" stroke="#374151" stroke-width="1.5"/>'
+        # centre circle
+        f'<circle cx="{cx}" cy="{cy}" r="{CP_CR}" fill="none" stroke="#374151" stroke-width="1.5"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="5" fill="#374151"/>'
+        # left pen area (GK side)
+        f'<rect x="{ox}" y="{pa_y}" width="{CP_PAW}" height="{CP_PAH}" fill="none" stroke="#374151" stroke-width="1.5"/>'
+        f'<rect x="{ox}" y="{ga_y}" width="{CP_GAW}" height="{CP_GAH}" fill="none" stroke="#374151" stroke-width="1"/>'
+        f'<circle cx="{ox+round(CPW*0.08)}" cy="{cy}" r="4" fill="#374151"/>'
+        # right pen area (ST side)
+        f'<rect x="{ox+pw-CP_PAW}" y="{pa_y}" width="{CP_PAW}" height="{CP_PAH}" fill="none" stroke="#374151" stroke-width="1.5"/>'
+        f'<rect x="{ox+pw-CP_GAW}" y="{ga_y}" width="{CP_GAW}" height="{CP_GAH}" fill="none" stroke="#374151" stroke-width="1"/>'
+        f'<circle cx="{ox+pw-round(CPW*0.08)}" cy="{cy}" r="4" fill="#374151"/>'
+        f'</svg>'
+    )
+
+def canva_slot_px(slot_x:float, slot_y:float)->tuple[int,int]:
+    """Portrait % (attack top=small y) → landscape px (GK left=small lx)
+    GK at y≈84 → lx small; ST at y≈9 → lx large
+    Left wing (x≈13) → ly small (top); right wing (x≈87) → ly large (bottom)
+    """
+    Y_MIN,Y_MAX=7.0,87.0
+    # Attack (y=9) → right side (high lx); defence (y=84) → left (low lx)
+    lx_pct = (slot_y - Y_MIN) / (Y_MAX - Y_MIN)   # 0=attack, 1=defence
+    lx_pct = 1.0 - lx_pct   # flip: 1=attack(right), 0=defence(left)
+    # Spread lx across pitch with padding
+    lx = CPX + 40 + lx_pct * (CPW - 80)
+    # portrait x (0=left/top, 100=right/bottom) → pitch y
+    ly = CPY + 20 + (slot_x / 100.0) * (CPH - 40)
+    return round(lx), round(ly)
 
 # ── Render pitch ───────────────────────────────────────────────────────────────
 def render_pitch(
@@ -433,31 +459,25 @@ def render_pitch(
     slots:list, slot_map:dict, depth:list, df_sc,
     show_mins:bool, show_goals:bool, show_assists:bool,
     show_positions:bool, show_roles:bool, xi_only:bool, canva:bool,
+    pitch_width_px:int=560,   # used for portrait PNG sizing
 )->str:
+    BG="#0a0f1c"
 
-    if canva:
-        badge_sz="9px"; nm_sz="9px"; stat_sz="6.5px"; role_sz="6px"
-    else:
-        badge_sz="15px"; nm_sz="14px"; stat_sz="9px"; role_sz="8px"
-
-    # ── Build player node HTML ──────────────────────────────────────────────────
-    def make_node(slot, pos_style:str)->str:
+    # ── shared node builder ────────────────────────────────────────────────────
+    def make_node(slot, pos_style:str, bsz:str, nsz:str, ssz:str, rsz:str)->str:
         ps_all=slot_map.get(slot["id"],[])
         ps=ps_all[:1] if xi_only else ps_all
-        badge=(f'<div style="display:inline-block;padding:2px 8px;'
-               f'border:2px solid #ef4444;color:#ef4444;font-size:{badge_sz};'
-               f'font-weight:900;letter-spacing:.1em;margin-bottom:3px;'
-               f'background:rgba(10,15,28,.95);">{slot["label"]}</div>')
+        badge=(f'<div style="display:inline-block;padding:2px 8px;border:2px solid #ef4444;'
+               f'color:#ef4444;font-size:{bsz};font-weight:900;letter-spacing:.1em;'
+               f'margin-bottom:3px;background:rgba(10,15,28,.97);">{slot["label"]}</div>')
         rows=""
         for i,p in enumerate(ps):
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
-            loan=is_loan(p); col=player_css_color(yrs,loan)
-            fw="800" if i==0 else "500"
+            loan=is_loan(p); col=player_css_color(yrs,loan); fw="800" if i==0 else "500"
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
-            loan_t=" (L)" if loan else ""
-            oop_tag=f" ({p.get('_primary_pos','')})" if p.get("_oop") else ""
-            suffix=f"{yr_str}{loan_t}{oop_tag}{multi}"
+            oop_s=f" ({p['_primary_pos']})" if p.get('_oop') else ''
+            suffix=f"{yr_str}{' (L)' if loan else ''}{oop_s}{multi}"
             stat_parts=[]
             if show_mins:   stat_parts.append(f"{int(float(p.get('Minutes played') or 0))}\u2032")
             if show_goals:
@@ -466,126 +486,201 @@ def render_pitch(
             if show_assists:
                 a=float(p.get("Assists") or 0)
                 if a>0: stat_parts.append(f"{int(a)}\U0001f170")
-            stat_html=(f'<div style="color:#ffffff;font-size:{stat_sz};line-height:1.2;opacity:.9;">'
+            stat_html=(f'<div style="color:#fff;font-size:{ssz};line-height:1.2;opacity:.9;">'
                        f'{" ".join(stat_parts)}</div>') if stat_parts else ""
             all_pos=", ".join(_all_toks(p.get("Position","")))
-            pos_html=(f'<div style="color:#9ca3af;font-size:{stat_sz};line-height:1.2;">'
-                      f'{all_pos}</div>') if (show_positions and all_pos) else ""
-            rs_html=(all_roles_html(p,df_sc,role_sz) if (i==0 and show_roles)
-                     else best_role_html(p,df_sc,role_sz) if (i>0 and show_roles) else "")
-            rows+=(f'<div style="color:{col};font-size:{nm_sz};line-height:1.4;'
-                   f'font-weight:{fw};white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.95);">'
+            pos_html=(f'<div style="color:#9ca3af;font-size:{ssz};line-height:1.2;">{all_pos}</div>'
+                      ) if (show_positions and all_pos) else ""
+            rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
+                     else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
+            rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};'
+                   f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
                    f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
         if not ps:
-            rows=f'<div style="color:#1f2937;font-size:{stat_sz};">&#8212;</div>'
+            rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
         return (f'<div style="position:absolute;{pos_style}'
                 f'transform:translate(-50%,-50%);text-align:center;min-width:80px;z-index:10;">'
                 f'{badge}<div>{rows}</div></div>')
 
-    # ── Portrait mode ───────────────────────────────────────────────────────────
-    if not canva:
-        nodes="".join(make_node(s,f'left:{s["x"]}%;top:{s["y"]}%;') for s in slots)
+    # ── legend text ───────────────────────────────────────────────────────────
+    def legend_text()->str:
+        s=""
+        if show_mins:    s+=" \u00b7 \u2032=mins"
+        if show_goals:   s+=" \u00b7 \u26bd=goals"
+        if show_assists: s+=" \u00b7 \U0001f170=assists"
+        return s
 
-        depth_html=""
-        if not xi_only and depth:
-            dep_nm="11px"; dep_rs="8px"; cards=""
-            for p in depth:
-                yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
-                loan=is_loan(p); col=player_css_color(yrs,loan)
-                multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
-                pos_t=_tok(p.get("Position",""))
-                br=best_role_html(p,df_sc,dep_rs) if show_roles else ""
-                cards+=(f'<div style="background:#0d1220;border:1px solid #1f2937;'
-                        f'padding:5px 9px;min-width:100px;text-align:center;flex-shrink:0;">'
-                        f'<div style="color:{col};font-size:{dep_nm};font-weight:700;">'
-                        f'{p["Player"]} {yr_str} {multi}</div>'
-                        f'<div style="color:#6b7280;font-size:7px;">{pos_t}</div>{br}</div>')
-            depth_html=(f'<div style="margin-top:10px;border-top:1px solid #1f2937;padding-top:8px;">'
-                        f'<div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:#6b7280;'
-                        f'margin-bottom:6px;text-align:center;">DEPTH</div>'
-                        f'<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">'
-                        f'{cards}</div></div>')
+    # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
+    if canva:
+        bsz="14px"; nsz="14px"; ssz="10px"; rsz="9px"
+        nodes=""
+        for slot in slots:
+            px,py=canva_slot_px(float(slot["x"]),float(slot["y"]))
+            nodes+=make_node(slot,f'left:{px}px;top:{py}px;',bsz,nsz,ssz,rsz)
 
-        legend_stats=""
-        if show_mins:    legend_stats+=" \u00b7 \u2032=mins"
-        if show_goals:   legend_stats+=" \u00b7 \u26bd=goals"
-        if show_assists: legend_stats+=" \u00b7 \U0001f170=assists"
+        header=(f'<div style="position:absolute;top:12px;left:40px;right:40px;'
+                f'display:flex;justify-content:space-between;align-items:center;z-index:20;">'
+                f'<div style="font-weight:900;font-size:28px;letter-spacing:.08em;'
+                f'text-transform:uppercase;">{team} Squad Depth</div>'
+                f'<div style="font-size:13px;color:#6b7280;letter-spacing:.08em;">'
+                f'{league} &nbsp;·&nbsp; {formation}</div></div>')
 
-        title_html=(f'<div style="font-weight:900;font-size:20px;letter-spacing:.05em;'
-                    f'text-transform:uppercase;text-align:center;margin-bottom:4px;">'
-                    f'{team} Squad Depth</div>')
-        header_html=(f'<div style="display:flex;justify-content:space-between;'
-                     f'align-items:baseline;margin-bottom:4px;font-size:9px;color:#6b7280;">'
-                     f'<span>{league}</span><span>{formation}</span></div>')
-        legend_bar=(f'<div style="text-align:center;font-size:8px;color:#6b7280;margin-top:6px;">'
-                    f'Name + contract years{legend_stats} \u00b7 \U0001f501=4+ positions</div>'
-                    f'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;'
-                    f'font-size:9px;font-weight:700;margin-top:4px;">'
-                    f'<span style="color:#fff;">Contracted</span>'
-                    f'<span style="color:#f59e0b;">Final Year</span>'
-                    f'<span style="color:#ef4444;">Out of Contract</span>'
-                    f'<span style="color:#22c55e;">On Loan</span></div>')
-        return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
-                f'background:#0a0f1c;padding:0 4px 10px;">'
-                f'{title_html}{header_html}'
-                f'<div style="position:relative;background:#0a0f1c;padding-bottom:142%;'
-                f'overflow:hidden;border:1px solid #0d1220;">'
-                f'<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"'
-                f' viewBox="0 0 100 142" preserveAspectRatio="none">{PORTRAIT_SVG}</svg>'
-                f'{nodes}</div>{depth_html}{legend_bar}</div>')
-
-    # ── Canva mode: fixed 1920×1080 px absolute layout ──────────────────────────
-    # Convert all slots to absolute pixel positions
-    nodes=""
-    for slot in slots:
-        px,py=landscape_px(float(slot["x"]),float(slot["y"]))
-        nodes+=make_node(slot,f'left:{px}px;top:{py}px;')
-
-    # Landscape SVG pitch: fits within PITCH_PX_W × PITCH_PX_H at offset PITCH_PX_X,PITCH_PX_Y
-    pw,ph=PITCH_PX_W,PITCH_PX_H; ox,oy=PITCH_PX_X,PITCH_PX_Y
-    hw=ph//2+oy   # half-way y
-    # penalty areas proportional to full pitch
-    pa_h=round(ph*0.36); pa_w=round(pw*0.115)
-    ga_h=round(ph*0.2);  ga_w=round(pw*0.05)
-    pa_y=oy+round((ph-pa_h)/2); ga_y=oy+round((ph-ga_h)/2)
-    cr=round(min(pw,ph)*0.07)
-    svg_w=CANVA_W; svg_h=CANVA_H
-    landscape_svg=(
-        f'<svg style="position:absolute;left:0;top:0;width:{svg_w}px;height:{svg_h}px;pointer-events:none;"'
-        f' viewBox="0 0 {svg_w} {svg_h}">'
-        # outer pitch rect
-        f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="none" stroke="#9ca3af" stroke-width="2"/>'
-        # half-way line
-        f'<line x1="{ox+pw//2}" y1="{oy}" x2="{ox+pw//2}" y2="{oy+ph}" stroke="#9ca3af" stroke-width="1.5"/>'
-        # centre circle
-        f'<circle cx="{ox+pw//2}" cy="{oy+ph//2}" r="{cr}" fill="none" stroke="#9ca3af" stroke-width="1.5"/>'
-        f'<circle cx="{ox+pw//2}" cy="{oy+ph//2}" r="5" fill="#9ca3af"/>'
-        # left penalty area
-        f'<rect x="{ox}" y="{pa_y}" width="{pa_w}" height="{pa_h}" fill="none" stroke="#9ca3af" stroke-width="1.5"/>'
-        f'<rect x="{ox}" y="{ga_y}" width="{ga_w}" height="{ga_h}" fill="none" stroke="#9ca3af" stroke-width="1"/>'
-        f'<circle cx="{ox+round(pw*0.09)}" cy="{oy+ph//2}" r="4" fill="#9ca3af"/>'
-        # right penalty area
-        f'<rect x="{ox+pw-pa_w}" y="{pa_y}" width="{pa_w}" height="{pa_h}" fill="none" stroke="#9ca3af" stroke-width="1.5"/>'
-        f'<rect x="{ox+pw-ga_w}" y="{ga_y}" width="{ga_w}" height="{ga_h}" fill="none" stroke="#9ca3af" stroke-width="1"/>'
-        f'<circle cx="{ox+pw-round(pw*0.09)}" cy="{oy+ph//2}" r="4" fill="#9ca3af"/>'
-        f'</svg>')
-
-    legend_stats=""
-    if show_mins:    legend_stats+=" \u00b7 \u2032=mins"
-    if show_goals:   legend_stats+=" \u00b7 \u26bd=goals"
-    if show_assists: legend_stats+=" \u00b7 \U0001f170=assists"
-    legend_bar=(f'<div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;'
-                f'font-size:9px;color:#6b7280;">'
-                f'Name + contract years{legend_stats} \u00b7 \U0001f501=4+ positions&nbsp;&nbsp;'
-                f'<span style="color:#fff;font-weight:700;">Contracted</span>&nbsp;'
-                f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&nbsp;'
-                f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&nbsp;'
+        legend=(f'<div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;'
+                f'font-size:10px;color:#6b7280;z-index:20;">'
+                f'Name + contract years{legend_text()} \u00b7 \U0001f501=4+ positions'
+                f'&nbsp;&nbsp;&nbsp;'
+                f'<span style="color:#fff;font-weight:700;">Contracted</span>&nbsp;&nbsp;'
+                f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&nbsp;&nbsp;'
+                f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&nbsp;&nbsp;'
                 f'<span style="color:#22c55e;font-weight:700;">On Loan</span></div>')
 
-    return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
-            f'background:#0a0f1c;width:{CANVA_W}px;height:{CANVA_H}px;'
-            f'position:relative;overflow:hidden;">'
-            f'{landscape_svg}{nodes}{legend_bar}</div>')
+        return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
+                f'background:{BG};width:{CANVA_W}px;height:{CANVA_H}px;position:relative;'
+                f'overflow:hidden;">'
+                f'{canva_landscape_svg()}{header}{nodes}{legend}</div>')
+
+    # ── PORTRAIT mode ─────────────────────────────────────────────────────────
+    bsz="15px"; nsz="14px"; ssz="9px"; rsz="8px"
+    nodes="".join(make_node(s,f'left:{s["x"]}%;top:{s["y"]}%;',bsz,nsz,ssz,rsz) for s in slots)
+
+    # Portrait SVG — very faint so it never overpowers player text
+    portrait_svg=(
+        '<svg style="position:absolute;inset:0;width:100%;height:100%;'
+        'pointer-events:none;z-index:1;" viewBox="0 0 100 142" preserveAspectRatio="none">'
+        + PORTRAIT_SVG + '</svg>')
+
+    depth_html=""
+    if not xi_only and depth:
+        cards=""
+        for p in depth:
+            yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
+            loan=is_loan(p); col=player_css_color(yrs,loan)
+            multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
+            pos_t=_tok(p.get("Position",""))
+            br=best_role_html(p,df_sc,"8px") if show_roles else ""
+            cards+=(f'<div style="background:#0d1220;border:1px solid #1f2937;'
+                    f'padding:5px 9px;min-width:100px;text-align:center;flex-shrink:0;">'
+                    f'<div style="color:{col};font-size:11px;font-weight:700;">'
+                    f'{p["Player"]} {yr_str} {multi}</div>'
+                    f'<div style="color:#6b7280;font-size:7px;">{pos_t}</div>{br}</div>')
+        depth_html=(f'<div style="margin-top:10px;border-top:1px solid #1f2937;padding-top:8px;">'
+                    f'<div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:#6b7280;'
+                    f'margin-bottom:6px;text-align:center;">DEPTH</div>'
+                    f'<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">'
+                    f'{cards}</div></div>')
+
+    title_html=(f'<div style="font-weight:900;font-size:20px;letter-spacing:.05em;'
+                f'text-transform:uppercase;text-align:center;margin-bottom:4px;">'
+                f'{team} Squad Depth</div>')
+    header_html=(f'<div style="display:flex;justify-content:space-between;'
+                 f'align-items:baseline;margin-bottom:4px;font-size:9px;color:#6b7280;">'
+                 f'<span>{league}</span><span>{formation}</span></div>')
+    legend_bar=(f'<div style="text-align:center;font-size:8px;color:#6b7280;margin-top:6px;">'
+                f'Name + contract years{legend_text()} \u00b7 \U0001f501=4+ positions</div>'
+                f'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;'
+                f'font-size:9px;font-weight:700;margin-top:4px;">'
+                f'<span style="color:#fff;">Contracted</span>'
+                f'<span style="color:#f59e0b;">Final Year</span>'
+                f'<span style="color:#ef4444;">Out of Contract</span>'
+                f'<span style="color:#22c55e;">On Loan</span></div>')
+
+    # The pitch uses padding-bottom:142% to maintain aspect ratio.
+    # For PNG capture we need an EXPLICIT pixel height.
+    # We embed a data-width attribute that the PNG capture script can use
+    # to work out the real rendered height.
+    return (f'<div id="pitch-root" data-pitch-w="{pitch_width_px}" '
+            f'style="font-family:Montserrat,sans-serif;color:#fff;background:{BG};padding:0 4px 10px;">'
+            f'{title_html}{header_html}'
+            f'<div id="pitch-field" style="position:relative;background:{BG};padding-bottom:142%;'
+            f'overflow:hidden;border:1px solid #1a2540;">'
+            f'{portrait_svg}{nodes}</div>'
+            f'{depth_html}{legend_bar}</div>')
+
+# ── HTML wrapper for standalone download ─────────────────────────────────────
+FONT_URL="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+
+def make_html_page(pitch_html:str, team:str, canva:bool, pitch_w:int=560)->str:
+    """Standalone HTML page that renders identically to Streamlit."""
+    BG="#0a0f1c"
+    if canva:
+        body_style=(f"margin:0;background:{BG};font-family:Montserrat,sans-serif;"
+                    f"display:flex;justify-content:center;align-items:center;"
+                    f"min-height:100vh;")
+        wrap_style="display:inline-block;"
+    else:
+        # Use exact pixel width so the pitch renders the same size as Streamlit
+        body_style=f"margin:0;background:{BG};font-family:Montserrat,sans-serif;"
+        wrap_style=f"width:{pitch_w}px;margin:0 auto;padding:8px;"
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>{team} Squad Depth</title>
+<style>
+@import url('{FONT_URL}');
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{{body_style}}}
+</style></head>
+<body><div style="{wrap_style}">{pitch_html}</div></body></html>"""
+
+def make_png_page(pitch_html:str, team:str, canva:bool, pitch_w:int=560)->str:
+    """HTML page that auto-captures itself as PNG using html2canvas."""
+    BG="#0a0f1c"
+    # For portrait: capture element has explicit px dimensions
+    # For canva: element is already fixed 1920×1080
+    if canva:
+        cap_w="1920"; cap_h="1080"
+        wrap_style="display:inline-block;"
+        extra_cfg=""
+    else:
+        # pitch aspect = 142%, so height = width * 1.42 approximately
+        # Add ~120px for title + legend areas
+        est_h = round(pitch_w * 1.42) + 160
+        cap_w=str(pitch_w); cap_h=str(est_h)
+        wrap_style=f"width:{pitch_w}px;"
+        # Force the pitch-field div to actual pixels (removes padding-bottom hack)
+        extra_cfg=f"""
+  // Fix padding-bottom aspect-ratio trick for html2canvas
+  var pf = el.querySelector('#pitch-field');
+  if(pf){{ pf.style.paddingBottom='0'; pf.style.height='{round(pitch_w*1.42)}px'; }}"""
+
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Saving PNG\u2026</title>
+<style>
+@import url('{FONT_URL}');
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:{BG};font-family:Montserrat,sans-serif;}}
+#msg{{color:#fff;font-size:13px;text-align:center;padding:10px;letter-spacing:.12em;
+      font-family:Montserrat,sans-serif;font-weight:700;}}
+</style></head>
+<body>
+<div id="msg">GENERATING PNG \u2014 PLEASE WAIT\u2026</div>
+<div id="capture" style="{wrap_style}">{pitch_html}</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+document.fonts.ready.then(function(){{
+  setTimeout(function(){{
+    var el = document.getElementById('capture');
+    {extra_cfg}
+    html2canvas(el, {{
+      backgroundColor: '{BG}',
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      width: {cap_w if canva else "el.offsetWidth"},
+      height: {cap_h if canva else "el.offsetHeight"},
+      windowWidth: {cap_w if canva else "el.offsetWidth"},
+      windowHeight: {cap_h if canva else "el.offsetHeight"}
+    }}).then(function(canvas){{
+      var a = document.createElement('a');
+      a.download = '{team.replace(" ","_")}_squad_depth.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      document.getElementById('msg').textContent = '\u2713 PNG SAVED \u2014 YOU CAN CLOSE THIS TAB';
+    }}).catch(function(e){{
+      document.getElementById('msg').textContent = 'ERROR: ' + e;
+    }});
+  }}, 1500);
+}});
+</script></body></html>"""
 
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
@@ -596,7 +691,7 @@ def _tog(k,d=False): return st.session_state.get(k,d)
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## ⚽ Squad Chart")
+    st.markdown("## \u26bd Squad Chart")
     st.markdown("---")
     st.markdown("**DATA**")
     uploaded=st.file_uploader("Upload CSV",type=["csv"])
@@ -614,9 +709,9 @@ with st.sidebar:
         if st.session_state.df is None or len(raw)!=len(st.session_state.df):
             st.session_state.df=raw; st.session_state.df_sc=None
         if st.session_state.df_sc is None:
-            with st.spinner("Computing role scores…"):
+            with st.spinner("Computing role scores\u2026"):
                 st.session_state.df_sc=compute_role_scores(st.session_state.df)
-        st.success(f"✓ {len(st.session_state.df):,} players · role scores ready")
+        st.success(f"\u2713 {len(st.session_state.df):,} players \u00b7 role scores ready")
 
     st.markdown("---")
     if st.session_state.df is not None:
@@ -635,15 +730,15 @@ with st.sidebar:
         st.toggle("Minutes played",  True,  key="show_mins")
         st.toggle("Goals",           True,  key="show_goals")
         st.toggle("Assists",         True,  key="show_assists")
-        st.toggle("Show positions",  False, key="show_positions")  # #4
+        st.toggle("Show positions",  False, key="show_positions")
         st.toggle("Role scores",     True,  key="show_roles")
-        st.toggle("XI only",         False, key="xi_only")         # #3
-        st.toggle("Canva 1920×1080", False, key="canva_mode")      # #5
+        st.toggle("XI only",         False, key="xi_only")
+        st.toggle("Canva 1920\u00d71080", False, key="canva_mode")
 
         st.markdown("---")
         changed=(sel_team!=st.session_state.last_team or
                  formation!=st.session_state.last_formation)
-        if st.button("🔄 Build / Rebuild") or changed:
+        if st.button("\U0001f504 Build / Rebuild") or changed:
             tdf=fdf[fdf["Team"]==sel_team].copy(); tdf["_key"]=tdf["Player"]
             sm,dep=assign_players(tdf.to_dict("records"),formation)
             st.session_state.slot_map=sm; st.session_state.depth=dep
@@ -655,7 +750,7 @@ with st.sidebar:
             st.markdown(f"**MOVING:** {mp['player']['Player']}")
             opts={f"{s['label']} ({s['id']})":s["id"] for s in FORMATIONS[formation]}
             dest_lbl=st.selectbox("Move to",list(opts.keys()))
-            if st.button("✅ Confirm Move"):
+            if st.button("\u2705 Confirm Move"):
                 p=mp["player"]; fid=mp["from_slot"]; did=opts[dest_lbl]
                 if fid=="_depth":
                     st.session_state.depth=[x for x in st.session_state.depth if x["_key"]!=p["_key"]]
@@ -663,7 +758,7 @@ with st.sidebar:
                     st.session_state.slot_map[fid]=[x for x in st.session_state.slot_map[fid] if x["_key"]!=p["_key"]]
                 st.session_state.slot_map.setdefault(did,[]).append(p)
                 st.session_state.move_player=None; st.rerun()
-            if st.button("❌ Cancel Move"):
+            if st.button("\u274c Cancel Move"):
                 st.session_state.move_player=None; st.rerun()
 
         if st.session_state.edit_contract_player:
@@ -671,7 +766,7 @@ with st.sidebar:
             st.markdown(f"**EDIT CONTRACT:** {ec['player']['Player']}")
             new_exp=st.text_input("Expires (YYYY-MM-DD)",
                                   value=ec["player"].get("Contract expires",""),key="new_exp")
-            if st.button("💾 Save Contract"):
+            if st.button("\U0001f4be Save Contract"):
                 pk=ec["player"]["_key"]
                 for sid,ps in st.session_state.slot_map.items():
                     for p in ps:
@@ -679,16 +774,15 @@ with st.sidebar:
                 for p in st.session_state.depth:
                     if p["_key"]==pk: p["Contract expires"]=new_exp
                 st.session_state.edit_contract_player=None; st.rerun()
-            if st.button("✖ Cancel Edit"):
+            if st.button("\u2716 Cancel Edit"):
                 st.session_state.edit_contract_player=None; st.rerun()
 
         st.markdown("---")
         st.markdown("**ADD PLAYER**")
         nn=st.text_input("Name",key="nn")
         np_=st.selectbox("Position",list(CANONICAL.keys()),key="np_")
-        # #1: manual extra positions input
         extra_pos=st.text_input("Extra positions (e.g. LCMF,AMF)",key="extra_pos",
-                                 help="Add extra positions separated by commas. 4+ positions = 🔁 emoji")
+                                 help="Comma-separated. 4+ positions = \U0001f501 emoji")
         nm_=st.number_input("Minutes",0,5000,0,10,key="nm_")
         ng_=st.number_input("Goals",0,100,0,key="ng_")
         na_=st.number_input("Assists",0,100,0,key="na_")
@@ -696,7 +790,7 @@ with st.sidebar:
         nl_=st.checkbox("On Loan?",key="nl_")
         sl_opts={f"{s['label']} ({s['id']})":s["id"] for s in FORMATIONS.get(formation,[])}
         ns_=st.selectbox("Add to slot",list(sl_opts.keys()),key="ns_")
-        if st.button("➕ Add Player") and nn.strip():
+        if st.button("\u2795 Add Player") and nn.strip():
             pos_str=np_
             if extra_pos.strip(): pos_str+=","+extra_pos.strip()
             new_p={"Player":nn.strip(),"Position":pos_str,"_key":f"custom_{nn}",
@@ -728,104 +822,52 @@ slots=FORMATIONS[formation]; slot_map=st.session_state.slot_map
 depth=st.session_state.depth; df_sc=st.session_state.df_sc
 canva=_tog("canva_mode")
 
+# Estimate the portrait pitch pixel width from Streamlit's main column
+# Streamlit wide layout main area ≈ 1140px; subtracting sidebar (300px) → ~840px usable
+# We use 560px as a conservative portrait width (matches typical Streamlit narrow render)
+PORTRAIT_W=560
+
 pitch=render_pitch(
     team_name,league_nm,formation,slots,slot_map,depth,df_sc,
     _tog("show_mins",True),_tog("show_goals",True),_tog("show_assists",True),
     _tog("show_positions"),_tog("show_roles",True),_tog("xi_only"),canva,
+    pitch_width_px=PORTRAIT_W,
 )
 
 if canva:
-    # Scale 1920×1080 fixed layout to fit browser window
+    # Scale 1920×1080 down to fit browser using CSS transform
+    # Container height = 1080 * (availableWidth/1920) to avoid scroll
     st.markdown(
-        f'<div style="width:100%;overflow-x:auto;background:#0a0f1c;">'
-        f'<div style="transform-origin:top left;width:1920px;">'
-        f'{pitch}</div></div>',
+        f'<div id="canva-scaler" style="width:100%;background:#0a0f1c;overflow:hidden;">'
+        f'<div style="transform-origin:top left;" id="canva-inner">{pitch}</div></div>'
+        f'<script>'
+        f'(function(){{'
+        f'  var wrap=document.getElementById("canva-scaler");'
+        f'  var inner=document.getElementById("canva-inner");'
+        f'  function scl(){{'
+        f'    var s=wrap.offsetWidth/1920;'
+        f'    inner.style.transform="scale("+s+")";'
+        f'    wrap.style.height=(1080*s)+"px";'
+        f'  }}'
+        f'  scl(); window.addEventListener("resize",scl);'
+        f'}})()'
+        f'</script>',
         unsafe_allow_html=True)
 else:
     st.markdown(pitch, unsafe_allow_html=True)
 
-# ── Downloads ──────────────────────────────────────────────────────────────────
-# Build standalone HTML for download (used for both HTML and PNG routes)
-page_bg="#0a0f1c"
-wrap_style = "display:inline-block;" if canva else "width:800px;margin:0 auto;"
-html_body=f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<title>{team_name} Squad Depth</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:{page_bg};font-family:Montserrat,sans-serif;}}
-</style></head>
-<body><div style="{wrap_style}">{pitch}</div>
-</body></html>"""
-
-# #6: PNG download — use server-side pillow+cairosvg if available,
-# otherwise provide the HTML-that-auto-saves-PNG approach
-# Best reliable approach for Streamlit Cloud: download HTML that on open triggers png save
-cap_w = "1920" if canva else str(round(800))
-cap_h = "1080" if canva else "auto"
-png_trigger_html=f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<title>Saving PNG…</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:{page_bg};font-family:Montserrat,sans-serif;}}
-#msg{{color:#fff;font-size:13px;text-align:center;padding:12px;letter-spacing:.1em;font-family:Montserrat,sans-serif;}}
-</style>
-</head>
-<body>
-<div id="msg">GENERATING PNG — PLEASE WAIT…</div>
-<div id="capture" style="display:inline-block;">{pitch}</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script>
-window.addEventListener('load',function(){{
-  document.fonts.ready.then(function(){{
-    setTimeout(function(){{
-      var el=document.getElementById('capture');
-      var cfg={{
-        backgroundColor:'{page_bg}',
-        scale:2,
-        useCORS:true,
-        allowTaint:false,
-        logging:false,
-        width:el.offsetWidth,
-        height:el.offsetHeight,
-        windowWidth:el.offsetWidth,
-        windowHeight:el.offsetHeight
-      }};
-      html2canvas(el,cfg).then(function(canvas){{
-        var link=document.createElement('a');
-        link.download='{team_name.replace(" ","_")}_squad_depth.png';
-        link.href=canvas.toDataURL('image/png');
-        link.click();
-        document.getElementById('msg').textContent='✓ PNG SAVED — YOU CAN CLOSE THIS TAB';
-      }}).catch(function(e){{
-        document.getElementById('msg').textContent='ERROR: '+e;
-      }});
-    }},1200);
-  }});
-}});
-</script>
-</body></html>"""
+# ── Downloads ─────────────────────────────────────────────────────────────────
+html_dl = make_html_page(pitch, team_name, canva, PORTRAIT_W)
+png_dl  = make_png_page(pitch, team_name, canva, PORTRAIT_W)
 
 dl1,dl2,_=st.columns([1,1,4])
 with dl1:
-    st.download_button(
-        "⬇ HTML",
-        html_body.encode("utf-8"),
-        f"{team_name.replace(' ','_')}_squad_depth.html",
-        "text/html",
-    )
+    st.download_button("\u2b07 HTML", html_dl.encode("utf-8"),
+        f"{team_name.replace(' ','_')}_squad_depth.html","text/html")
 with dl2:
-    # #6: Download this HTML file → open in browser → auto-saves PNG
-    st.download_button(
-        "⬇ PNG",
-        png_trigger_html.encode("utf-8"),
-        f"{team_name.replace(' ','_')}_OPEN_TO_SAVE_PNG.html",
-        "text/html",
-        help="Download → open in Chrome/Edge → PNG auto-saves to your Downloads folder",
-    )
+    st.download_button("\u2b07 PNG",  png_dl.encode("utf-8"),
+        f"{team_name.replace(' ','_')}_OPEN_TO_SAVE_PNG.html","text/html",
+        help="Download \u2192 open in Chrome/Edge \u2192 PNG auto-saves")
 
 # ── Move / Remove / Edit Contract ─────────────────────────────────────────────
 st.markdown("---")
@@ -851,7 +893,7 @@ if all_on:
                     unsafe_allow_html=True)
         rm_opts={f"{e['player']['Player']} ({e['lbl']})":e for e in all_on}
         rm_sel=st.selectbox("",list(rm_opts.keys()),key="rm_sel",label_visibility="collapsed")
-        if st.button("🗑 Remove"):
+        if st.button("\U0001f5d1 Remove"):
             e=rm_opts[rm_sel]; sid=e["sid"]; pk=e["player"]["_key"]
             if sid=="_depth":
                 st.session_state.depth=[x for x in st.session_state.depth if x["_key"]!=pk]
@@ -863,13 +905,13 @@ if all_on:
                     unsafe_allow_html=True)
         ec_opts={f"{e['player']['Player']} ({e['lbl']})":e for e in all_on}
         ec_sel=st.selectbox("",list(ec_opts.keys()),key="ec_sel",label_visibility="collapsed")
-        if st.button("✏️ Edit Contract"):
+        if st.button("\u270f\ufe0f Edit Contract"):
             e=ec_opts[ec_sel]
             st.session_state.edit_contract_player={"player":e["player"],"sid":e["sid"]}; st.rerun()
 
 # ── Full squad ─────────────────────────────────────────────────────────────────
 if st.session_state.df is not None and team_name:
-    with st.expander("📋 Full Squad"):
+    with st.expander("\U0001f4cb Full Squad"):
         tdf3=st.session_state.df[st.session_state.df["Team"]==team_name]
         show_c=[c for c in ["Player","Position","Minutes played","Goals","Assists",
                              "Market value","Contract expires","Age"] if c in tdf3.columns]
