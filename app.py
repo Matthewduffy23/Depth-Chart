@@ -169,9 +169,9 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
         {"id":"LWB", "label":"LWB", "x":9, "y":32, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
-        {"id":"AM1", "label":"AM",  "x":30,"y":36, "accepts":["AM","CM"],        "side":"L"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":46, "accepts":["DM","CM"],        "side":"N"},
-        {"id":"AM2", "label":"AM",  "x":70,"y":36, "accepts":["AM","CM"],        "side":"R"},
+        {"id":"AM",  "label":"AM",  "x":30,"y":36, "accepts":["AM","CM"],        "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM","CM"],        "side":"N"},
+        {"id":"CM",  "label":"CM",  "x":70,"y":36, "accepts":["CM","AM"],        "side":"R"},
         {"id":"RWB", "label":"RWB", "x":91,"y":32, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
@@ -207,10 +207,10 @@ FORMATIONS:dict[str,list[dict]]={
     "4-1-4-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"LW",  "label":"LW",  "x":9, "y":26, "accepts":["LW"],             "side":"L"},
-        {"id":"CM1", "label":"CM",  "x":31,"y":29, "accepts":["CM","AM"],        "side":"L"},
-        {"id":"CM2", "label":"CM",  "x":69,"y":29, "accepts":["CM","AM"],        "side":"R"},
+        {"id":"AM",  "label":"AM",  "x":30,"y":33, "accepts":["AM","CM"],        "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":36, "accepts":["DM","CM"],        "side":"N"},
+        {"id":"CM",  "label":"CM",  "x":70,"y":33, "accepts":["CM","AM"],        "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":26, "accepts":["RW"],             "side":"R"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM","CM"],        "side":"N"},
         {"id":"LB",  "label":"LB",  "x":9, "y":63, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
@@ -355,10 +355,11 @@ def all_roles_html(player,df_sc,fs="8px"):
     best=max(scores,key=scores.get); lines=[]
     for rn,sc in sorted(scores.items(),key=lambda x:-x[1]):
         sc_col=score_to_color(sc); is_b=rn==best
+        name_col = sc_col if is_b else "#7a8494"   # slightly whiter non-best
         lines.append(
-            f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;">'
-            f'<span style="color:{sc_col if is_b else "#4b5563"};font-weight:{"700" if is_b else "400"};">{rn}</span>'
-            f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};">{int(sc)}</span></div>')
+            f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;min-width:90px;">'
+            f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};">{rn}</span>'
+            f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};min-width:22px;text-align:right;">{int(sc)}</span></div>')
     return f'<div style="margin-top:2px;">{"".join(lines)}</div>'
 
 def best_role_html(player,df_sc,fs="8px"):
@@ -372,9 +373,9 @@ def best_role_html(player,df_sc,fs="8px"):
         if isinstance(v,(int,float)) and not np.isnan(float(v)): scores[rn]=float(v)
     if not scores: return ""
     best=max(scores,key=scores.get); sc=scores[best]; sc_col=score_to_color(sc)
-    return (f'<div style="font-size:{fs};line-height:1.4;margin-top:2px;">'
-            f'<span style="color:#4b5563;">{best} </span>'
-            f'<span style="color:{sc_col};font-weight:700;">{int(sc)}</span></div>')
+    return (f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;margin-top:2px;min-width:90px;">'
+            f'<span style="color:#7a8494;">{best}</span>'
+            f'<span style="color:{sc_col};font-weight:700;min-width:22px;text-align:right;">{int(sc)}</span></div>')
 
 # ── SVG pitch lines — dimmed so text always wins ──────────────────────────────
 # Opacity 0.18 so pitch outline is visible as a guide but never overpowers text
@@ -401,8 +402,9 @@ PORTRAIT_SVG="""
 # Pitch block: 1520px wide × 870px tall, centred in 1920×1080
 CANVA_W, CANVA_H = 1920, 1080
 # Pitch draw area within Canva (GK on left, ST on right)
-CPX, CPY = 100, 90      # top-left of pitch
-CPW, CPH = 1720, 860    # pitch width × height
+# Maximise pitch area - tiny margins top/bottom for legend only
+CPX, CPY = 60, 55       # top-left of pitch (minimal top margin)
+CPW, CPH = 1800, 940    # pitch width × height (almost full slide)
 # penalty area proportions
 CP_PAW = round(CPW * 0.12)  # penalty area width
 CP_PAH = round(CPH * 0.38)
@@ -459,7 +461,9 @@ def render_pitch(
     slots:list, slot_map:dict, depth:list, df_sc,
     show_mins:bool, show_goals:bool, show_assists:bool,
     show_positions:bool, show_roles:bool, xi_only:bool, canva:bool,
-    pitch_width_px:int=560,   # used for portrait PNG sizing
+    pitch_width_px:int=560,
+    white_names:bool=False,
+    show_contracts:bool=True,
 )->str:
     BG="#0a0f1c"
 
@@ -474,10 +478,14 @@ def render_pitch(
         for i,p in enumerate(ps):
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
-            loan=is_loan(p); col=player_css_color(yrs,loan); fw="800" if i==0 else "500"
+            loan=is_loan(p); fw="800" if i==0 else "500"
+            col="#ffffff" if white_names else player_css_color(yrs,loan)
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             oop_s=f" ({p['_primary_pos']})" if p.get('_oop') else ''
-            suffix=f"{yr_str}{' (L)' if loan else ''}{oop_s}{multi}"
+            if loan:
+                suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
+            else:
+                suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
             stat_parts=[]
             if show_mins:   stat_parts.append(f"{int(float(p.get('Minutes played') or 0))}\u2032")
             if show_goals:
@@ -498,8 +506,19 @@ def render_pitch(
                    f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
         if not ps:
             rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
+        # Edge alignment: push left-edge nodes right, right-edge nodes left
+        sx=float(slot.get("x",50))
+        if sx<20:   # left edge - anchor left side so text goes rightward
+            align="left"
+            transform="translate(-8px,-50%)"
+        elif sx>80: # right edge - anchor right side so text goes leftward
+            align="right"
+            transform="translate(calc(-100% + 8px),-50%)"
+        else:       # centre - standard centering
+            align="center"
+            transform="translate(-50%,-50%)"
         return (f'<div style="position:absolute;{pos_style}'
-                f'transform:translate(-50%,-50%);text-align:center;min-width:80px;z-index:10;">'
+                f'transform:{transform};text-align:{align};min-width:{"150px" if canva else "80px"};z-index:10;">'
                 f'{badge}<div>{rows}</div></div>')
 
     # ── legend text ───────────────────────────────────────────────────────────
@@ -512,21 +531,22 @@ def render_pitch(
 
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     if canva:
-        bsz="14px"; nsz="14px"; ssz="10px"; rsz="9px"
+        bsz="26px"; nsz="24px"; ssz="16px"; rsz="14px"
         nodes=""
         for slot in slots:
             px,py=canva_slot_px(float(slot["x"]),float(slot["y"]))
             nodes+=make_node(slot,f'left:{px}px;top:{py}px;',bsz,nsz,ssz,rsz)
 
-        header=(f'<div style="position:absolute;top:12px;left:40px;right:40px;'
+        header=(f'<div style="position:absolute;top:8px;left:40px;right:40px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;">'
-                f'<div style="font-weight:900;font-size:28px;letter-spacing:.08em;'
+                f'<div style="font-weight:900;font-size:32px;letter-spacing:.08em;'
                 f'text-transform:uppercase;">{team} Squad Depth</div>'
-                f'<div style="font-size:13px;color:#6b7280;letter-spacing:.08em;">'
+                f'<div style="font-size:20px;color:#6b7280;letter-spacing:.08em;">'
                 f'{league} &nbsp;·&nbsp; {formation}</div></div>')
 
-        legend=(f'<div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;'
-                f'font-size:10px;color:#6b7280;z-index:20;">'
+
+        legend=(f'<div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;'
+                f'font-size:16px;color:#6b7280;z-index:20;">'
                 f'Name + contract years{legend_text()} \u00b7 \U0001f501=4+ positions'
                 f'&nbsp;&nbsp;&nbsp;'
                 f'<span style="color:#fff;font-weight:700;">Contracted</span>&nbsp;&nbsp;'
@@ -554,14 +574,16 @@ def render_pitch(
         cards=""
         for p in depth:
             yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
-            loan=is_loan(p); col=player_css_color(yrs,loan)
+            loan=is_loan(p)
+            col="#ffffff" if white_names else player_css_color(yrs,loan)
             multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
             pos_t=_tok(p.get("Position",""))
             br=best_role_html(p,df_sc,"8px") if show_roles else ""
+            dep_yr = "L" if loan else (f"+{yrs}" if yrs>=0 else "+?")
             cards+=(f'<div style="background:#0d1220;border:1px solid #1f2937;'
                     f'padding:5px 9px;min-width:100px;text-align:center;flex-shrink:0;">'
                     f'<div style="color:{col};font-size:11px;font-weight:700;">'
-                    f'{p["Player"]} {yr_str} {multi}</div>'
+                    f'{p["Player"]} {dep_yr} {multi}</div>'
                     f'<div style="color:#6b7280;font-size:7px;">{pos_t}</div>{br}</div>')
         depth_html=(f'<div style="margin-top:10px;border-top:1px solid #1f2937;padding-top:8px;">'
                     f'<div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:#6b7280;'
@@ -604,19 +626,23 @@ def make_html_page(pitch_html:str, team:str, canva:bool, pitch_w:int=560)->str:
     BG="#0a0f1c"
     if canva:
         body_style=(f"margin:0;background:{BG};font-family:Montserrat,sans-serif;"
-                    f"display:flex;justify-content:center;align-items:center;"
-                    f"min-height:100vh;")
+                    f"display:flex;justify-content:center;align-items:flex-start;")
         wrap_style="display:inline-block;"
     else:
-        # Use exact pixel width so the pitch renders the same size as Streamlit
         body_style=f"margin:0;background:{BG};font-family:Montserrat,sans-serif;"
+        # Fix pitch-field: replace padding-bottom trick with explicit height for standalone
         wrap_style=f"width:{pitch_w}px;margin:0 auto;padding:8px;"
+    page_fix_css=""
+    if not canva:
+        # Force pitch-field to explicit height so it renders correctly in browsers
+        page_fix_css=f"#pitch-field{{height:{round(pitch_w*1.45)}px!important;padding-bottom:0!important;}}"
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{team} Squad Depth</title>
 <style>
 @import url('{FONT_URL}');
 *{{box-sizing:border-box;margin:0;padding:0}}
 body{{{body_style}}}
+{page_fix_css}
 </style></head>
 <body><div style="{wrap_style}">{pitch_html}</div></body></html>"""
 
@@ -733,6 +759,8 @@ with st.sidebar:
         st.toggle("Show positions",  False, key="show_positions")
         st.toggle("Role scores",     True,  key="show_roles")
         st.toggle("XI only",         False, key="xi_only")
+        st.toggle("White names",     False, key="white_names")
+        st.toggle("Show contracts",  True,  key="show_contracts")
         st.toggle("Canva 1920\u00d71080", False, key="canva_mode")
 
         st.markdown("---")
@@ -825,13 +853,15 @@ canva=_tog("canva_mode")
 # Estimate the portrait pitch pixel width from Streamlit's main column
 # Streamlit wide layout main area ≈ 1140px; subtracting sidebar (300px) → ~840px usable
 # We use 560px as a conservative portrait width (matches typical Streamlit narrow render)
-PORTRAIT_W=560
+PORTRAIT_W=700
 
 pitch=render_pitch(
     team_name,league_nm,formation,slots,slot_map,depth,df_sc,
     _tog("show_mins",True),_tog("show_goals",True),_tog("show_assists",True),
     _tog("show_positions"),_tog("show_roles",True),_tog("xi_only"),canva,
     pitch_width_px=PORTRAIT_W,
+    white_names=_tog("white_names"),
+    show_contracts=_tog("show_contracts",True),
 )
 
 if canva:
