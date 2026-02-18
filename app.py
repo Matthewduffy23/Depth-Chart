@@ -590,7 +590,7 @@ def render_pitch(
 
     aspect  = "56.25%" if canva else "140%"
     nm_sz   = "14px"   if canva else "12px"
-    badge_sz= "10px"   if canva else "8.5px"
+    badge_sz= "12px"   if canva else "11px"
     stat_sz = "9px"    if canva else "7px"
     role_sz = "8.5px"  if canva else "7.5px"
     dep_nm  = "11px"   if canva else "10px"
@@ -777,11 +777,11 @@ with st.sidebar:
 
         st.markdown("---")
         st.markdown("**DISPLAY**")
-        show_mins    = st.toggle("Minutes played",  True)
-        show_goals   = st.toggle("Goals",            True)
-        show_assists = st.toggle("Assists",           True)
-        show_roles   = st.toggle("Role scores",      True)
-        canva_mode   = st.toggle("1920×1080 Canva",  False)
+        st.toggle("Minutes played",  True,  key="show_mins")
+        st.toggle("Goals",           True,  key="show_goals")
+        st.toggle("Assists",         True,  key="show_assists")
+        st.toggle("Role scores",     True,  key="show_roles")
+        st.toggle("1920×1080 Canva", False, key="canva_mode")
 
         st.markdown("---")
         changed = (sel_team   != st.session_state.last_team or
@@ -892,6 +892,34 @@ if _tog("canva_mode", False):
     )
 else:
     st.markdown(pitch, unsafe_allow_html=True)
+
+# ── Download ───────────────────────────────────────────────────────────────────
+canva_w = _tog("canva_mode", False)
+page_w  = "1920px" if canva_w else "900px"
+html_dl = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{team_name} Depth Chart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+  body {{ margin: 0; background: #0a0f1c; font-family: Montserrat, sans-serif; }}
+  .wrap {{ width: {page_w}; margin: 0 auto; padding: 20px; }}
+</style>
+</head>
+<body>
+<div class="wrap">{pitch}</div>
+</body>
+</html>"""
+
+dl_col, _ = st.columns([1, 4])
+with dl_col:
+    st.download_button(
+        label="⬇ Download HTML",
+        data=html_dl.encode("utf-8"),
+        file_name=f"{team_name.replace(' ', '_')}_depth_chart.html",
+        mime="text/html",
+    )
 
 # ── Move / Remove ──────────────────────────────────────────────────────────────
 st.markdown("---")
