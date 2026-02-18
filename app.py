@@ -227,25 +227,21 @@ FORMATIONS:dict[str,list[dict]]={
 
 PITCH_ORDER=["GK","LCB","CB","RCB","LB","RB","LWB","RWB","DM","CM","AM","LW","RW","ST"]
 
-# ── #5: Landscape transform: portrait (x=L-R, y=9-84 attack→defence)
-#   → landscape (GK LEFT x=low, ST RIGHT x=high; top-bottom = original left-right)
-#   new_lx: invert y-axis, normalise to 5-95%
-#   new_ly: map original x (0-100 portrait L-R) → top-bottom on landscape (top=y=0 = original LEFT side)
-def landscape_slots(slots:list)->list:
-    Y_MIN,Y_MAX=7.0,87.0   # portrait y range for actual positions
-    out=[]
-    for s in slots:
-        ns=dict(s)
-        ox,oy=float(s["x"]),float(s["y"])
-        lx=5+(oy-Y_MIN)/(Y_MAX-Y_MIN)*90   # GK(y=84)→right; ST(y=9)→left ... wait we want GK LEFT
-        # We want GK on LEFT → low lx when oy is high (84)
-        # So: lx = 95 - (oy-Y_MIN)/(Y_MAX-Y_MIN)*90
-        lx=95-(oy-Y_MIN)/(Y_MAX-Y_MIN)*90
-        ly=ox   # original x (left-right) becomes top-bottom
-        ns["x"]=round(max(3,min(97,lx)),1)
-        ns["y"]=round(max(3,min(95,ly)),1)
-        out.append(ns)
-    return out
+# ── Landscape: convert portrait % coords to fixed pixel coords (1920×1080)
+# Pitch area: 1800×880px, offset (60, 100) within 1920×1080
+# GK(portrait y=84) → landscape left (small lx); ST(y=9) → landscape right
+CANVA_W,CANVA_H = 1920,1080
+PITCH_PX_W,PITCH_PX_H = 1800,840
+PITCH_PX_X,PITCH_PX_Y = 60,120   # pitch offset within canva div
+CANVA_Y_MIN,CANVA_Y_MAX = 7.0,87.0
+
+def landscape_px(ox:float,oy:float)->tuple[int,int]:
+    """Portrait % → landscape absolute pixel coords within 1920×1080"""
+    lx_pct=95-(oy-CANVA_Y_MIN)/(CANVA_Y_MAX-CANVA_Y_MIN)*90
+    ly_pct=ox
+    px=PITCH_PX_X+lx_pct/100*PITCH_PX_W
+    py=PITCH_PX_Y+ly_pct/100*PITCH_PX_H
+    return round(px),round(py)
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def contract_years(s)->int:
@@ -387,7 +383,7 @@ def all_roles_html(player,df_sc,fs="8px"):
             f'<div style="display:flex;justify-content:space-between;gap:5px;font-size:{fs};line-height:1.5;">'
             f'<span style="color:{sc_col if is_b else "#6b7280"};font-weight:{"700" if is_b else "400"};">{rn}</span>'
             f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};">{int(sc)}</span></div>')
-    return f'<div style="margin-top:3px;padding-top:3px;border-top:1px solid #1f2937;">{"".join(lines)}</div>'
+    return f'<div style="margin-top:2px;">{"".join(lines)}</div>'
 
 def best_role_html(player,df_sc,fs="8px"):
     if df_sc is None or df_sc.empty: return ""
@@ -406,163 +402,190 @@ def best_role_html(player,df_sc,fs="8px"):
 
 # ── SVG lines: #2 more visible (near-white stroke) ────────────────────────────
 PORTRAIT_SVG="""
-  <rect  x="2"   y="2"     width="96" height="138" fill="none" stroke="#6b7280" stroke-width="1.2"/>
-  <line  x1="2"  y1="71"   x2="98"   y2="71"      stroke="#6b7280" stroke-width=".8"/>
-  <circle cx="50" cy="71" r="10"                   fill="none" stroke="#6b7280" stroke-width=".8"/>
-  <circle cx="50" cy="71" r="1.2"                  fill="#6b7280"/>
-  <rect  x="22"  y="2"     width="56" height="18"  fill="none" stroke="#6b7280" stroke-width=".8"/>
-  <rect  x="36"  y="2"     width="28" height="7"   fill="none" stroke="#6b7280" stroke-width=".6"/>
-  <circle cx="50" cy="14" r=".9"                   fill="#6b7280"/>
-  <rect  x="22"  y="122"   width="56" height="18"  fill="none" stroke="#6b7280" stroke-width=".8"/>
-  <rect  x="36"  y="133"   width="28" height="7"   fill="none" stroke="#6b7280" stroke-width=".6"/>
-  <circle cx="50" cy="126" r=".9"                   fill="#6b7280"/>"""
+  <rect  x="2"   y="2"     width="96" height="138" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+  <line  x1="2"  y1="71"   x2="98"   y2="71"      stroke="#9ca3af" stroke-width=".8"/>
+  <circle cx="50" cy="71" r="10"                   fill="none" stroke="#9ca3af" stroke-width=".8"/>
+  <circle cx="50" cy="71" r="1.2"                  fill="#9ca3af"/>
+  <rect  x="22"  y="2"     width="56" height="18"  fill="none" stroke="#9ca3af" stroke-width=".8"/>
+  <rect  x="36"  y="2"     width="28" height="7"   fill="none" stroke="#9ca3af" stroke-width=".6"/>
+  <circle cx="50" cy="14" r=".9"                   fill="#9ca3af"/>
+  <rect  x="22"  y="122"   width="56" height="18"  fill="none" stroke="#9ca3af" stroke-width=".8"/>
+  <rect  x="36"  y="133"   width="28" height="7"   fill="none" stroke="#9ca3af" stroke-width=".6"/>
+  <circle cx="50" cy="126" r=".9"                   fill="#9ca3af"/>"""
 
 # Landscape SVG: pitch runs left (GK) to right (ST), standard football landscape
 # viewBox="0 0 142 100" matches the div's aspect ratio approach
 LANDSCAPE_SVG="""
-  <rect  x="2"   y="2"     width="138" height="96" fill="none" stroke="#6b7280" stroke-width="1.2"/>
-  <line  x1="71" y1="2"    x2="71"    y2="98"     stroke="#6b7280" stroke-width=".8"/>
-  <circle cx="71" cy="50" r="10"                   fill="none" stroke="#6b7280" stroke-width=".8"/>
-  <circle cx="71" cy="50" r="1.2"                  fill="#6b7280"/>
-  <rect  x="2"   y="22"    width="18"  height="56" fill="none" stroke="#6b7280" stroke-width=".8"/>
-  <rect  x="2"   y="36"    width="7"   height="28" fill="none" stroke="#6b7280" stroke-width=".6"/>
-  <circle cx="13" cy="50" r=".9"                   fill="#6b7280"/>
-  <rect  x="122" y="22"    width="18"  height="56" fill="none" stroke="#6b7280" stroke-width=".8"/>
-  <rect  x="133" y="36"    width="7"   height="28" fill="none" stroke="#6b7280" stroke-width=".6"/>
-  <circle cx="129" cy="50" r=".9"                  fill="#6b7280"/>"""
+  <rect  x="2"   y="2"     width="138" height="96" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+  <line  x1="71" y1="2"    x2="71"    y2="98"     stroke="#9ca3af" stroke-width=".8"/>
+  <circle cx="71" cy="50" r="10"                   fill="none" stroke="#9ca3af" stroke-width=".8"/>
+  <circle cx="71" cy="50" r="1.2"                  fill="#9ca3af"/>
+  <rect  x="2"   y="22"    width="18"  height="56" fill="none" stroke="#9ca3af" stroke-width=".8"/>
+  <rect  x="2"   y="36"    width="7"   height="28" fill="none" stroke="#9ca3af" stroke-width=".6"/>
+  <circle cx="13" cy="50" r=".9"                   fill="#9ca3af"/>
+  <rect  x="122" y="22"    width="18"  height="56" fill="none" stroke="#9ca3af" stroke-width=".8"/>
+  <rect  x="133" y="36"    width="7"   height="28" fill="none" stroke="#9ca3af" stroke-width=".6"/>
+  <circle cx="129" cy="50" r=".9"                  fill="#9ca3af"/>"""
 
 # ── Render pitch ───────────────────────────────────────────────────────────────
 def render_pitch(
     team:str, league:str, formation:str,
     slots:list, slot_map:dict, depth:list, df_sc,
     show_mins:bool, show_goals:bool, show_assists:bool,
-    show_positions:bool,  # #4 show all positions line
-    show_roles:bool,
-    xi_only:bool,         # #3 only 1 player per slot shown on pitch
-    canva:bool,
+    show_positions:bool, show_roles:bool, xi_only:bool, canva:bool,
 )->str:
 
     if canva:
-        # #5: landscape — GK left, ST right
-        badge_sz="10px"; nm_sz="10px"; stat_sz="7px"; role_sz="6.5px"
-        render_slots=landscape_slots(slots)
-        svg_vb="0 0 142 100"; svg_lines=LANDSCAPE_SVG
-        pitch_aspect="70.4%"   # 100/142 * 100
-        pitch_style=(
-            f'position:relative;background:#0a0f1c;'
-            f'padding-bottom:{pitch_aspect};overflow:hidden;border:1px solid #1f2937;'
-            f'width:100%;')
+        badge_sz="9px"; nm_sz="9px"; stat_sz="6.5px"; role_sz="6px"
     else:
         badge_sz="15px"; nm_sz="14px"; stat_sz="9px"; role_sz="8px"
-        render_slots=slots
-        svg_vb="0 0 100 142"; svg_lines=PORTRAIT_SVG
-        pitch_aspect="142%"
-        pitch_style=(
-            f'position:relative;background:#0a0f1c;'
-            f'padding-bottom:{pitch_aspect};overflow:hidden;border:1px solid #0d1220;')
 
-    nodes=""
-    for slot in render_slots:
+    # ── Build player node HTML ──────────────────────────────────────────────────
+    def make_node(slot, pos_style:str)->str:
         ps_all=slot_map.get(slot["id"],[])
-        # #3: xi_only → show only starter on pitch; depth list still hidden
         ps=ps_all[:1] if xi_only else ps_all
-
         badge=(f'<div style="display:inline-block;padding:2px 8px;'
                f'border:2px solid #ef4444;color:#ef4444;font-size:{badge_sz};'
                f'font-weight:900;letter-spacing:.1em;margin-bottom:3px;'
-               f'background:rgba(10,15,28,.93);">{slot["label"]}</div>')
+               f'background:rgba(10,15,28,.95);">{slot["label"]}</div>')
         rows=""
         for i,p in enumerate(ps):
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p); col=player_css_color(yrs,loan)
             fw="800" if i==0 else "500"
-            multi=" 🔁" if _multi_role(p.get("Position","")) else ""
+            multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             loan_t=" (L)" if loan else ""
             oop_tag=f" ({p.get('_primary_pos','')})" if p.get("_oop") else ""
             suffix=f"{yr_str}{loan_t}{oop_tag}{multi}"
-
             stat_parts=[]
-            if show_mins:   stat_parts.append(f"{int(float(p.get('Minutes played') or 0))}′")
+            if show_mins:   stat_parts.append(f"{int(float(p.get('Minutes played') or 0))}\u2032")
             if show_goals:
                 g=float(p.get("Goals") or 0)
-                if g>0: stat_parts.append(f"{int(g)}⚽")
+                if g>0: stat_parts.append(f"{int(g)}\u26bd")
             if show_assists:
                 a=float(p.get("Assists") or 0)
-                if a>0: stat_parts.append(f"{int(a)}🅰")
-            stat_html=(f'<div style="color:#ffffff;font-size:{stat_sz};line-height:1.2;opacity:.85;">'
+                if a>0: stat_parts.append(f"{int(a)}\U0001f170")
+            stat_html=(f'<div style="color:#ffffff;font-size:{stat_sz};line-height:1.2;opacity:.9;">'
                        f'{" ".join(stat_parts)}</div>') if stat_parts else ""
-
-            # #4: all positions line
             all_pos=", ".join(_all_toks(p.get("Position","")))
             pos_html=(f'<div style="color:#9ca3af;font-size:{stat_sz};line-height:1.2;">'
                       f'{all_pos}</div>') if (show_positions and all_pos) else ""
-
             rs_html=(all_roles_html(p,df_sc,role_sz) if (i==0 and show_roles)
                      else best_role_html(p,df_sc,role_sz) if (i>0 and show_roles) else "")
-
-            rows+=(f'<div style="color:{col};font-size:{nm_sz};line-height:1.5;'
-                   f'font-weight:{fw};white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.95);">'
+            rows+=(f'<div style="color:{col};font-size:{nm_sz};line-height:1.4;'
+                   f'font-weight:{fw};white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.95);">'
                    f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
-
         if not ps:
-            rows=f'<div style="color:#1f2937;font-size:{stat_sz};">—</div>'
-
-        nodes+=(f'<div style="position:absolute;left:{slot["x"]}%;top:{slot["y"]}%;'
+            rows=f'<div style="color:#1f2937;font-size:{stat_sz};">&#8212;</div>'
+        return (f'<div style="position:absolute;{pos_style}'
                 f'transform:translate(-50%,-50%);text-align:center;min-width:80px;z-index:10;">'
                 f'{badge}<div>{rows}</div></div>')
 
-    # Depth section (hidden in XI only mode)
-    depth_html=""
-    if not xi_only and depth:
-        dep_nm="11px"; dep_rs="8px"
-        cards=""
-        for p in depth:
-            yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
-            loan=is_loan(p); col=player_css_color(yrs,loan)
-            multi="🔁" if _multi_role(p.get("Position","")) else ""
-            pos_t=_tok(p.get("Position",""))
-            br=best_role_html(p,df_sc,dep_rs) if show_roles else ""
-            cards+=(f'<div style="background:#0d1220;border:1px solid #1f2937;'
-                    f'padding:5px 9px;min-width:100px;text-align:center;flex-shrink:0;">'
-                    f'<div style="color:{col};font-size:{dep_nm};font-weight:700;">'
-                    f'{p["Player"]} {yr_str} {multi}</div>'
-                    f'<div style="color:#6b7280;font-size:7px;">{pos_t}</div>{br}</div>')
-        depth_html=(f'<div style="margin-top:10px;border-top:1px solid #1f2937;padding-top:8px;">'
-                    f'<div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:#6b7280;'
-                    f'margin-bottom:6px;text-align:center;">DEPTH</div>'
-                    f'<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">'
-                    f'{cards}</div></div>')
+    # ── Portrait mode ───────────────────────────────────────────────────────────
+    if not canva:
+        nodes="".join(make_node(s,f'left:{s["x"]}%;top:{s["y"]}%;') for s in slots)
+
+        depth_html=""
+        if not xi_only and depth:
+            dep_nm="11px"; dep_rs="8px"; cards=""
+            for p in depth:
+                yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
+                loan=is_loan(p); col=player_css_color(yrs,loan)
+                multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
+                pos_t=_tok(p.get("Position",""))
+                br=best_role_html(p,df_sc,dep_rs) if show_roles else ""
+                cards+=(f'<div style="background:#0d1220;border:1px solid #1f2937;'
+                        f'padding:5px 9px;min-width:100px;text-align:center;flex-shrink:0;">'
+                        f'<div style="color:{col};font-size:{dep_nm};font-weight:700;">'
+                        f'{p["Player"]} {yr_str} {multi}</div>'
+                        f'<div style="color:#6b7280;font-size:7px;">{pos_t}</div>{br}</div>')
+            depth_html=(f'<div style="margin-top:10px;border-top:1px solid #1f2937;padding-top:8px;">'
+                        f'<div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:#6b7280;'
+                        f'margin-bottom:6px;text-align:center;">DEPTH</div>'
+                        f'<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">'
+                        f'{cards}</div></div>')
+
+        legend_stats=""
+        if show_mins:    legend_stats+=" \u00b7 \u2032=mins"
+        if show_goals:   legend_stats+=" \u00b7 \u26bd=goals"
+        if show_assists: legend_stats+=" \u00b7 \U0001f170=assists"
+
+        title_html=(f'<div style="font-weight:900;font-size:20px;letter-spacing:.05em;'
+                    f'text-transform:uppercase;text-align:center;margin-bottom:4px;">'
+                    f'{team} Squad Depth</div>')
+        header_html=(f'<div style="display:flex;justify-content:space-between;'
+                     f'align-items:baseline;margin-bottom:4px;font-size:9px;color:#6b7280;">'
+                     f'<span>{league}</span><span>{formation}</span></div>')
+        legend_bar=(f'<div style="text-align:center;font-size:8px;color:#6b7280;margin-top:6px;">'
+                    f'Name + contract years{legend_stats} \u00b7 \U0001f501=4+ positions</div>'
+                    f'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;'
+                    f'font-size:9px;font-weight:700;margin-top:4px;">'
+                    f'<span style="color:#fff;">Contracted</span>'
+                    f'<span style="color:#f59e0b;">Final Year</span>'
+                    f'<span style="color:#ef4444;">Out of Contract</span>'
+                    f'<span style="color:#22c55e;">On Loan</span></div>')
+        return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
+                f'background:#0a0f1c;padding:0 4px 10px;">'
+                f'{title_html}{header_html}'
+                f'<div style="position:relative;background:#0a0f1c;padding-bottom:142%;'
+                f'overflow:hidden;border:1px solid #0d1220;">'
+                f'<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"'
+                f' viewBox="0 0 100 142" preserveAspectRatio="none">{PORTRAIT_SVG}</svg>'
+                f'{nodes}</div>{depth_html}{legend_bar}</div>')
+
+    # ── Canva mode: fixed 1920×1080 px absolute layout ──────────────────────────
+    # Convert all slots to absolute pixel positions
+    nodes=""
+    for slot in slots:
+        px,py=landscape_px(float(slot["x"]),float(slot["y"]))
+        nodes+=make_node(slot,f'left:{px}px;top:{py}px;')
+
+    # Landscape SVG pitch: fits within PITCH_PX_W × PITCH_PX_H at offset PITCH_PX_X,PITCH_PX_Y
+    pw,ph=PITCH_PX_W,PITCH_PX_H; ox,oy=PITCH_PX_X,PITCH_PX_Y
+    hw=ph//2+oy   # half-way y
+    # penalty areas proportional to full pitch
+    pa_h=round(ph*0.36); pa_w=round(pw*0.115)
+    ga_h=round(ph*0.2);  ga_w=round(pw*0.05)
+    pa_y=oy+round((ph-pa_h)/2); ga_y=oy+round((ph-ga_h)/2)
+    cr=round(min(pw,ph)*0.07)
+    svg_w=CANVA_W; svg_h=CANVA_H
+    landscape_svg=(
+        f'<svg style="position:absolute;left:0;top:0;width:{svg_w}px;height:{svg_h}px;pointer-events:none;"'
+        f' viewBox="0 0 {svg_w} {svg_h}">'
+        # outer pitch rect
+        f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="none" stroke="#9ca3af" stroke-width="2"/>'
+        # half-way line
+        f'<line x1="{ox+pw//2}" y1="{oy}" x2="{ox+pw//2}" y2="{oy+ph}" stroke="#9ca3af" stroke-width="1.5"/>'
+        # centre circle
+        f'<circle cx="{ox+pw//2}" cy="{oy+ph//2}" r="{cr}" fill="none" stroke="#9ca3af" stroke-width="1.5"/>'
+        f'<circle cx="{ox+pw//2}" cy="{oy+ph//2}" r="5" fill="#9ca3af"/>'
+        # left penalty area
+        f'<rect x="{ox}" y="{pa_y}" width="{pa_w}" height="{pa_h}" fill="none" stroke="#9ca3af" stroke-width="1.5"/>'
+        f'<rect x="{ox}" y="{ga_y}" width="{ga_w}" height="{ga_h}" fill="none" stroke="#9ca3af" stroke-width="1"/>'
+        f'<circle cx="{ox+round(pw*0.09)}" cy="{oy+ph//2}" r="4" fill="#9ca3af"/>'
+        # right penalty area
+        f'<rect x="{ox+pw-pa_w}" y="{pa_y}" width="{pa_w}" height="{pa_h}" fill="none" stroke="#9ca3af" stroke-width="1.5"/>'
+        f'<rect x="{ox+pw-ga_w}" y="{ga_y}" width="{ga_w}" height="{ga_h}" fill="none" stroke="#9ca3af" stroke-width="1"/>'
+        f'<circle cx="{ox+pw-round(pw*0.09)}" cy="{oy+ph//2}" r="4" fill="#9ca3af"/>'
+        f'</svg>')
 
     legend_stats=""
-    if show_mins:    legend_stats+=" · ′=mins"
-    if show_goals:   legend_stats+=" · ⚽=goals"
-    if show_assists: legend_stats+=" · 🅰=assists"
+    if show_mins:    legend_stats+=" \u00b7 \u2032=mins"
+    if show_goals:   legend_stats+=" \u00b7 \u26bd=goals"
+    if show_assists: legend_stats+=" \u00b7 \U0001f170=assists"
+    legend_bar=(f'<div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;'
+                f'font-size:9px;color:#6b7280;">'
+                f'Name + contract years{legend_stats} \u00b7 \U0001f501=4+ positions&nbsp;&nbsp;'
+                f'<span style="color:#fff;font-weight:700;">Contracted</span>&nbsp;'
+                f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&nbsp;'
+                f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&nbsp;'
+                f'<span style="color:#22c55e;font-weight:700;">On Loan</span></div>')
 
-    title_html=("" if canva else
-                f'<div style="font-weight:900;font-size:20px;letter-spacing:.05em;'
-                f'text-transform:uppercase;text-align:center;margin-bottom:4px;">'
-                f'{team} Squad Depth</div>')
-    header_html=(f'<div style="display:flex;justify-content:space-between;'
-                 f'align-items:baseline;margin-bottom:4px;font-size:9px;color:#6b7280;">'
-                 f'<span>{league}</span><span>{formation}</span></div>')
-    legend_bar=(f'<div style="text-align:center;font-size:8px;color:#6b7280;margin-top:6px;">'
-                f'Name + contract years{legend_stats} · 🔁=4+ positions</div>'
-                f'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;'
-                f'font-size:9px;font-weight:700;margin-top:4px;">'
-                f'<span style="color:#fff;">Contracted</span>'
-                f'<span style="color:#f59e0b;">Final Year</span>'
-                f'<span style="color:#ef4444;">Out of Contract</span>'
-                f'<span style="color:#22c55e;">On Loan</span></div>')
-
-    outer=(f'font-family:Montserrat,sans-serif;color:#fff;background:#0a0f1c;padding:0 4px 10px;')
-    return (f'<div id="pitch-root" style="{outer}">'
-            f'{title_html}{header_html}'
-            f'<div style="{pitch_style}">'
-            f'<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"'
-            f' viewBox="{svg_vb}" preserveAspectRatio="none">{svg_lines}</svg>'
-            f'{nodes}</div>'
-            f'{depth_html}{legend_bar}</div>')
+    return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
+            f'background:#0a0f1c;width:{CANVA_W}px;height:{CANVA_H}px;'
+            f'position:relative;overflow:hidden;">'
+            f'{landscape_svg}{nodes}{legend_bar}</div>')
 
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
@@ -712,10 +735,10 @@ pitch=render_pitch(
 )
 
 if canva:
-    # #5: wrap in a 16:9 scaler so it fits the browser without cutting off
+    # Scale 1920×1080 fixed layout to fit browser window
     st.markdown(
-        f'<div style="width:100%;background:#0a0f1c;">'
-        f'<div style="width:100%;aspect-ratio:16/9;overflow:hidden;">'
+        f'<div style="width:100%;overflow-x:auto;background:#0a0f1c;">'
+        f'<div style="transform-origin:top left;width:1920px;">'
         f'{pitch}</div></div>',
         unsafe_allow_html=True)
 else:
@@ -724,50 +747,54 @@ else:
 # ── Downloads ──────────────────────────────────────────────────────────────────
 # Build standalone HTML for download (used for both HTML and PNG routes)
 page_bg="#0a0f1c"
+wrap_style = "display:inline-block;" if canva else "width:800px;margin:0 auto;"
 html_body=f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <title>{team_name} Squad Depth</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
 *{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:{page_bg};font-family:Montserrat,sans-serif;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;}}
-.wrap{{width:{"100%" if canva else "800px"};{"aspect-ratio:16/9;" if canva else ""}padding:16px;overflow:{"hidden" if canva else "auto"};}}
+body{{background:{page_bg};font-family:Montserrat,sans-serif;}}
 </style></head>
-<body><div class="wrap">{pitch}</div>
+<body><div style="{wrap_style}">{pitch}</div>
 </body></html>"""
 
 # #6: PNG download — use server-side pillow+cairosvg if available,
 # otherwise provide the HTML-that-auto-saves-PNG approach
 # Best reliable approach for Streamlit Cloud: download HTML that on open triggers png save
+cap_w = "1920" if canva else str(round(800))
+cap_h = "1080" if canva else "auto"
 png_trigger_html=f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <title>Saving PNG…</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
-body{{background:{page_bg};margin:0;font-family:Montserrat,sans-serif;}}
-#msg{{color:#fff;font-family:Montserrat,sans-serif;font-size:13px;text-align:center;padding:12px;letter-spacing:.1em;}}
-.wrap{{display:inline-block;}}
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:{page_bg};font-family:Montserrat,sans-serif;}}
+#msg{{color:#fff;font-size:13px;text-align:center;padding:12px;letter-spacing:.1em;font-family:Montserrat,sans-serif;}}
 </style>
 </head>
 <body>
 <div id="msg">GENERATING PNG — PLEASE WAIT…</div>
-<div class="wrap" id="capture">{pitch}</div>
+<div id="capture" style="display:inline-block;">{pitch}</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 window.addEventListener('load',function(){{
-  // wait for fonts + images
   document.fonts.ready.then(function(){{
     setTimeout(function(){{
       var el=document.getElementById('capture');
-      html2canvas(el,{{
+      var cfg={{
         backgroundColor:'{page_bg}',
         scale:2,
         useCORS:true,
         allowTaint:false,
         logging:false,
-        width:el.scrollWidth,
-        height:el.scrollHeight
-      }}).then(function(canvas){{
+        width:el.offsetWidth,
+        height:el.offsetHeight,
+        windowWidth:el.offsetWidth,
+        windowHeight:el.offsetHeight
+      }};
+      html2canvas(el,cfg).then(function(canvas){{
         var link=document.createElement('a');
         link.download='{team_name.replace(" ","_")}_squad_depth.png';
         link.href=canvas.toDataURL('image/png');
@@ -776,7 +803,7 @@ window.addEventListener('load',function(){{
       }}).catch(function(e){{
         document.getElementById('msg').textContent='ERROR: '+e;
       }});
-    }},800);
+    }},1200);
   }});
 }});
 </script>
