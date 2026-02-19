@@ -505,7 +505,7 @@ def all_roles_html(player,df_sc,fs="8px",flip=False):
                 f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};min-width:22px;text-align:right;">{int(sc)}</span></div>')
     return f'<div style="margin-top:2px;">{"".join(lines)}</div>'
 
-def best_role_html(player,df_sc,fs="8px"):
+def best_role_html(player,df_sc,fs="8px",flip=False):
     if df_sc is None or df_sc.empty: return ""
     rows=df_sc[df_sc["Player"]==player.get("Player","")]
     if rows.empty: return ""
@@ -618,6 +618,7 @@ def render_pitch(
     pitch_width_px:int=560,
     white_names:bool=False,
     show_contracts:bool=True,
+    best_role_only:bool=False,
 )->str:
     BG="#0a0f1c"
 
@@ -658,7 +659,8 @@ def render_pitch(
             all_pos=", ".join(_all_toks(p.get("Position","")))
             pos_html=(f'<div style="color:#9ca3af;font-size:{ssz};line-height:1.2;">{all_pos}</div>'
                       ) if (show_positions and all_pos) else ""
-            rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
+            rs_html=(best_role_html(p,df_sc,rsz) if (show_roles and best_role_only)
+                     else all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                      else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
             mt="margin-top:5px;" if i>0 else ""
             rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
@@ -712,7 +714,7 @@ def render_pitch(
             ps_all=slot_map.get(slot["id"],[])
             ps=ps_all[:1] if xi_only else ps_all
             badge=(f'<div style="display:inline-block;padding:3px 12px;'
-                   f'border-radius:8px;background:#9ca3af;'
+                   f'border-radius:8px;background:#b8bfc9;'
                    f'color:#1f2937;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
                    f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
             rows=""
@@ -733,7 +735,8 @@ def render_pitch(
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
                 mt="margin-top:5px;" if i>0 else ""
-                rs_html=(all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (i==0 and show_roles)
+                rs_html=(best_role_html(p,df_sc,rsz,flip=(ta=="right")) if (show_roles and best_role_only)
+                         else all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
@@ -980,6 +983,7 @@ with st.sidebar:
         st.toggle("Assists",         True,  key="show_assists")
         st.toggle("Show positions",  False, key="show_positions")
         st.toggle("Role scores",     True,  key="show_roles")
+        st.toggle("Best role only",  False, key="best_role_only")
         st.toggle("XI only",         False, key="xi_only")
         st.toggle("White names",     False, key="white_names")
         st.toggle("Show contracts",  True,  key="show_contracts")
@@ -1088,6 +1092,7 @@ pitch=render_pitch(
     pitch_width_px=PORTRAIT_W,
     white_names=_tog("white_names"),
     show_contracts=_tog("show_contracts",True),
+    best_role_only=_tog("best_role_only"),
 )
 
 if canva:
