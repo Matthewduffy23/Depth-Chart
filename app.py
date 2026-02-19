@@ -629,22 +629,14 @@ def render_pitch(
                f'color:#ef4444;font-size:{bsz};font-weight:900;letter-spacing:.1em;'
                f'margin-bottom:3px;background:rgba(10,15,28,.97);">{slot["label"]}</div>')
         rows=""
-        # Slot-level NEW SIGNING placeholder
         _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
-        if _slot_ns:
-            _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
-            _sn_sub=_slot_ns.get("sub","")
-            rows+=(f'<div style="color:#f97316;font-size:{nsz};font-weight:800;'
-                    f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;'
-                    f'text-shadow:0 0 8px rgba(0,0,0,1);">{_sn_lbl}</div>')
-            if _sn_sub:
-                rows+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
-                        f'line-height:1.3;">{_sn_sub}</div>')
         for i,p in enumerate(ps):
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p); fw="800" if i==0 else "500"
-            col="#ffffff" if white_names else player_css_color(yrs,loan,is_loaned_out(p),is_youth(p))
+            _lo=is_loaned_out(p); _yt=is_youth(p)
+            col=(player_css_color(yrs,loan,_lo,_yt) if (loan or _lo or _yt or yrs<=1)
+                 else ("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt)))
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             _hpo=st.session_state.get('hide_pos_override',set())
             oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
@@ -672,7 +664,18 @@ def render_pitch(
             rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
                    f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
                    f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
-        if not ps:
+        if _slot_ns:
+            _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
+            _sn_sub=_slot_ns.get("sub","")
+            _sn_col=_slot_ns.get("color","#ef4444")
+            mt_ns="margin-top:4px;" if ps else ""
+            rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
+                    f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;'
+                    f'text-shadow:0 0 8px rgba(0,0,0,1);">{_sn_lbl}</div>')
+            if _sn_sub:
+                rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
+                        f'line-height:1.3;">{_sn_sub}</div>')
+        if not ps and not _slot_ns:
             rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
         sx=float(slot.get("x",50))
         is_edge=(sx<20 or sx>80)
@@ -710,24 +713,17 @@ def render_pitch(
             ps=ps_all[:1] if xi_only else ps_all
             badge=(f'<div style="display:inline-block;padding:3px 12px;'
                    f'border-radius:8px;background:#9ca3af;'
-                   f'color:#9ca3af;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
-                   f'margin-bottom:5px;white-space:nowrap;user-select:none;">{slot["label"]}</div>')
+                   f'color:#1f2937;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
+                   f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
             rows=""
-            # Slot-level NEW SIGNING placeholder
             _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
-            if _slot_ns:
-                _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
-                _sn_sub=_slot_ns.get("sub","")
-                rows+=(f'<div style="color:#f97316;font-size:{nsz};font-weight:800;'
-                        f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;">{_sn_lbl}</div>')
-                if _sn_sub:
-                    rows+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
-                            f'line-height:1.3;">{_sn_sub}</div>')
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
                 loan=is_loan(p); fw="700" if i==0 else "400"
-                col="#ffffff" if white_names else player_css_color(yrs,loan,is_loaned_out(p),is_youth(p))
+                _lo=is_loaned_out(p); _yt=is_youth(p)
+                col=(player_css_color(yrs,loan,_lo,_yt) if (loan or _lo or _yt or yrs<=1)
+                     else ("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt)))
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 _hpo=st.session_state.get("hide_pos_override",set())
                 oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
@@ -742,7 +738,17 @@ def render_pitch(
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
                        f'{p["Player"]}{suffix}</div>{rs_html}')
-            if not ps:
+            if _slot_ns:
+                _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
+                _sn_sub=_slot_ns.get("sub","")
+                _sn_col=_slot_ns.get("color","#ef4444")
+                mt_ns="margin-top:4px;" if ps else ""
+                rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
+                        f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;">{_sn_lbl}</div>')
+                if _sn_sub:
+                    rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
+                            f'line-height:1.3;">{_sn_sub}</div>')
+            if not ps and not _slot_ns:
                 rows=f'<div style="color:#4b5563;font-size:{ssz};">&#8212;</div>'
             return (f'<div style="position:absolute;left:{lx}px;top:{ly}px;'
                     f'transform:{tx};text-align:{ta};z-index:10;">'
@@ -786,7 +792,9 @@ def render_pitch(
         for p in depth:
             yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p)
-            col="#ffffff" if white_names else player_css_color(yrs,loan,is_loaned_out(p),is_youth(p))
+            _lo=is_loaned_out(p); _yt=is_youth(p)
+            col=(player_css_color(yrs,loan,_lo,_yt) if (loan or _lo or _yt or yrs<=1)
+                 else ("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt)))
             multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
             pos_t=_tok(p.get("Position",""))
             br=best_role_html(p,df_sc,"8px") if show_roles else ""
@@ -815,7 +823,9 @@ def render_pitch(
                 f'<span style="color:#fff;">Contracted</span>'
                 f'<span style="color:#f59e0b;">Final Year</span>'
                 f'<span style="color:#ef4444;">Out of Contract</span>'
-                f'<span style="color:#22c55e;">On Loan</span></div>')
+                f'<span style="color:#22c55e;">On Loan</span>'
+                f'<span style="color:#eab308;">Loaned Out</span>'
+                f'<span style="color:#9ca3af;">Youth</span></div>')
 
     # The pitch uses padding-bottom:142% to maintain aspect ratio.
     # For PNG capture we need an EXPLICIT pixel height.
@@ -1238,13 +1248,18 @@ if all_on:
                                   help="e.g. NEW SIGNING, TARGET, TRIALIST")
         ns_sub_val=st.text_input("Subtitle (optional)",_def_sub,key="ns_sub_val",
                                   help="e.g. Wide Creator U23")
+        _def_col=ns_existing.get("color","#ef4444") if ns_existing else "#ef4444"
+        ns_col_val=st.selectbox("Colour",["#ef4444","#f97316","#eab308"],
+                                 index=["#ef4444","#f97316","#eab308"].index(_def_col) if _def_col in ["#ef4444","#f97316","#eab308"] else 0,
+                                 format_func=lambda x:{"#ef4444":"Red","#f97316":"Orange","#eab308":"Yellow"}[x],
+                                 key="ns_col_val")
     ns_btn_lbl="✅ Showing — click to remove" if ns_on else "🟠 Add to slot"
     if st.button(ns_btn_lbl,key="ns_toggle_btn"):
         ns_dict=st.session_state.setdefault("new_signing",{})
         if ns_on:
             ns_dict.pop(ns_sid,None)
         else:
-            ns_dict[ns_sid]={"label":ns_lbl_val.strip() or "NEW SIGNING","sub":ns_sub_val.strip()}
+            ns_dict[ns_sid]={"label":ns_lbl_val.strip() or "NEW SIGNING","sub":ns_sub_val.strip(),"color":ns_col_val}
         st.session_state.new_signing=ns_dict; st.rerun()
 
 
