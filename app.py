@@ -234,10 +234,18 @@ def is_loan(p:dict)->bool:
             return True
     return False
 
-def player_css_color(yrs:int,loan:bool)->str:
-    if loan:   return "#22c55e"
-    if yrs==0: return "#ef4444"
-    if yrs==1: return "#f59e0b"
+def is_loaned_out(p:dict)->bool:
+    return str(p.get("Loaned Out","")).strip().lower() in ("yes","y","true","1")
+
+def is_youth(p:dict)->bool:
+    return str(p.get("Youth Player","")).strip().lower() in ("yes","y","true","1")
+
+def player_css_color(yrs:int,loan:bool,loaned_out:bool=False,youth:bool=False)->str:
+    if loaned_out: return "#eab308"   # yellow — loaned out
+    if youth:      return "#9ca3af"   # light grey — youth player
+    if loan:       return "#22c55e"   # green — on loan (incoming)
+    if yrs==0:     return "#ef4444"   # red — out of contract
+    if yrs==1:     return "#f59e0b"   # amber — final year
     return "#ffffff"
 
 def score_to_color(v:float)->str:
@@ -470,7 +478,7 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
     return slot_map,depth
 
 # ── Score HTML ─────────────────────────────────────────────────────────────────
-def all_roles_html(player,df_sc,fs="8px"):
+def all_roles_html(player,df_sc,fs="8px",flip=False):
     if df_sc is None or df_sc.empty: return ""
     rows=df_sc[df_sc["Player"]==player.get("Player","")]
     if rows.empty: return ""
@@ -483,11 +491,18 @@ def all_roles_html(player,df_sc,fs="8px"):
     best=max(scores,key=scores.get); lines=[]
     for rn,sc in sorted(scores.items(),key=lambda x:-x[1]):
         sc_col=score_to_color(sc); is_b=rn==best
-        name_col = sc_col if is_b else "#7a8494"   # slightly whiter non-best
-        lines.append(
-            f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;min-width:90px;">'
-            f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};">{rn}</span>'
-            f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};min-width:22px;text-align:right;">{int(sc)}</span></div>')
+        name_col = sc_col if is_b else "#7a8494"
+        if flip:
+            # Right-anchored node: score on left, label on right so it reads toward the pitch
+            lines.append(
+                f'<div style="display:flex;justify-content:flex-end;gap:6px;font-size:{fs};line-height:1.4;">'
+                f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};min-width:22px;text-align:right;">{int(sc)}</span>'
+                f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};">{rn}</span></div>')
+        else:
+            lines.append(
+                f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;min-width:90px;">'
+                f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};">{rn}</span>'
+                f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};min-width:22px;text-align:right;">{int(sc)}</span></div>')
     return f'<div style="margin-top:2px;">{"".join(lines)}</div>'
 
 def best_role_html(player,df_sc,fs="8px"):
@@ -618,11 +633,16 @@ def render_pitch(
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p); fw="800" if i==0 else "500"
-            col="#ffffff" if white_names else player_css_color(yrs,loan)
+            col="#ffffff" if white_names else player_css_color(yrs,loan,is_loaned_out(p),is_youth(p))
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             _hpo=st.session_state.get('hide_pos_override',set())
             oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
-            if loan:
+            lo=is_loaned_out(p); yt=is_youth(p)
+            if lo:
+                suffix=f" LO{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
+            elif yt:
+                suffix=f" Y{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
+            elif loan:
                 suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
             else:
                 suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
@@ -675,7 +695,7 @@ def render_pitch(
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     # Landscape pitch: GK left → ST right, full-width, smart node anchoring.
     if canva:
-        bsz="30px"; nsz="28px"; ssz="21px"; rsz="20px"
+        bsz="32px"; nsz="29px"; ssz="21px"; rsz="20px"
 
         def make_canva_node_ls(slot)->str:
             lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
@@ -690,16 +710,21 @@ def render_pitch(
                 yrs=contract_years(p.get("Contract expires",""))
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
                 loan=is_loan(p); fw="700" if i==0 else "400"
-                col="#ffffff" if white_names else player_css_color(yrs,loan)
+                col="#ffffff" if white_names else player_css_color(yrs,loan,is_loaned_out(p),is_youth(p))
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 _hpo=st.session_state.get("hide_pos_override",set())
                 oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
-                if loan:
+                lo=is_loaned_out(p); yt=is_youth(p)
+                if lo:
+                    suffix=f" LO{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
+                elif yt:
+                    suffix=f" Y{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
+                elif loan:
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
                 mt="margin-top:5px;" if i>0 else ""
-                rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
+                rs_html=(all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
@@ -721,7 +746,9 @@ def render_pitch(
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
                 f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&ensp;'
                 f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
-                f'<span style="color:#22c55e;font-weight:700;">On Loan</span>&ensp;'
+                f'<span style="color:#22c55e;font-weight:700;">On Loan (L)</span>&ensp;'
+                f'<span style="color:#eab308;font-weight:700;">Loaned Out (LO)</span>&ensp;'
+                f'<span style="color:#9ca3af;font-weight:700;">Youth (Y)</span>&ensp;'
                 f'<span style="color:#6b7280;">{league} · {formation}</span>'
                 f'</span></div>')
 
@@ -746,7 +773,7 @@ def render_pitch(
         for p in depth:
             yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p)
-            col="#ffffff" if white_names else player_css_color(yrs,loan)
+            col="#ffffff" if white_names else player_css_color(yrs,loan,is_loaned_out(p),is_youth(p))
             multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
             pos_t=_tok(p.get("Position",""))
             br=best_role_html(p,df_sc,"8px") if show_roles else ""
@@ -987,7 +1014,9 @@ with st.sidebar:
         ng_=st.number_input("Goals",0,100,0,key="ng_")
         na_=st.number_input("Assists",0,100,0,key="na_")
         ne_=st.text_input("Contract expires","2026-06-30",key="ne_")
-        nl_=st.checkbox("On Loan?",key="nl_")
+        nl_=st.checkbox("On Loan? (incoming, green)",key="nl_")
+        nlo_=st.checkbox("Loaned Out? (yellow)",key="nlo_")
+        nyt_=st.checkbox("Youth Player? (grey)",key="nyt_")
         sl_opts={f"{s['label']} ({s['id']})":s["id"] for s in FORMATIONS.get(formation,[])}
         ns_=st.selectbox("Add to slot",list(sl_opts.keys()),key="ns_")
         if st.button("\u2795 Add Player") and nn.strip():
@@ -996,6 +1025,8 @@ with st.sidebar:
             new_p={"Player":nn.strip(),"Position":pos_str,"_key":f"custom_{nn}",
                    "Minutes played":nm_,"Goals":ng_,"Assists":na_,
                    "Contract expires":ne_,"On Loan":"yes" if nl_ else "no",
+                   "Loaned Out":"yes" if nlo_ else "no",
+                   "Youth Player":"yes" if nyt_ else "no",
                    "League":lg,"Team":sel_team}
             st.session_state.slot_map.setdefault(sl_opts[ns_],[]).append(new_p)
             st.rerun()
