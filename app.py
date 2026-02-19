@@ -133,36 +133,37 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"RW",  "label":"RW",  "x":87,"y":25, "accepts":["RW","AM"],        "side":"R"},
         {"id":"DM",  "label":"DM",  "x":35,"y":46, "accepts":["DM"],             "side":"L"},
         {"id":"CM",  "label":"CM",  "x":65,"y":46, "accepts":["CM"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-3-3":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW"],             "side":"L"},
         {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW"],             "side":"R"},
-        {"id":"CM",  "label":"CM",  "x":22,"y":40, "accepts":["CM"],             "side":"L"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":40, "accepts":["DM"],             "side":"N"},
-        {"id":"AM",  "label":"AM",  "x":78,"y":40, "accepts":["AM"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"CM",  "label":"CM",  "x":22,"y":36, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM"],             "side":"N"},
+        {"id":"AM",  "label":"AM",  "x":78,"y":36, "accepts":["AM"],             "side":"R"},
+        {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-4-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
         {"id":"LW",  "label":"LW",  "x":9, "y":34, "accepts":["LW","AM"],        "side":"L"},
-        {"id":"CM1", "label":"CM",  "x":34,"y":38, "accepts":["CM"],             "side":"L"},
-        {"id":"CM2", "label":"CM",  "x":66,"y":38, "accepts":["CM"],             "side":"R"},
+        {"id":"CM1", "label":"CM",  "x":30,"y":38, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM"],             "side":"N"},
+        {"id":"CM2", "label":"CM",  "x":70,"y":38, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "3-5-2":[
@@ -183,26 +184,28 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"ST2", "label":"ST",  "x":65,"y":8,  "accepts":["ST"],             "side":"R"},
         {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N"},
         {"id":"LWB", "label":"LWB", "x":9, "y":35, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
-        {"id":"CM1", "label":"CM",  "x":34,"y":39, "accepts":["CM"],             "side":"L"},
-        {"id":"CM2", "label":"CM",  "x":66,"y":39, "accepts":["CM"],             "side":"R"},
+        {"id":"CM1", "label":"CM",  "x":30,"y":39, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM"],             "side":"N"},
+        {"id":"CM2", "label":"CM",  "x":70,"y":39, "accepts":["CM"],             "side":"R"},
         {"id":"RWB", "label":"RWB", "x":91,"y":35, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":61, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":65, "accepts":["CB","LCB","RCB"], "side":"N"},
         {"id":"RCB", "label":"RCB", "x":75,"y":61, "accepts":["RCB","CB"],       "side":"R"},
         {"id":"GK",  "label":"GK",  "x":50,"y":82, "accepts":["GK"],             "side":"N"},
     ],
-    "4-5-1":[
+    "3-4-3":[
+        {"id":"LW",  "label":"LW",  "x":14,"y":9,  "accepts":["LW","AM"],        "side":"L"},
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
-        {"id":"LW",  "label":"LW",  "x":9, "y":25, "accepts":["LW"],             "side":"L"},
-        {"id":"CM1", "label":"CM",  "x":30,"y":33, "accepts":["CM"],             "side":"L"},
-        {"id":"AM",  "label":"AM",  "x":50,"y":25, "accepts":["AM"],             "side":"N"},
-        {"id":"CM2", "label":"CM",  "x":70,"y":33, "accepts":["CM"],             "side":"R"},
-        {"id":"RW",  "label":"RW",  "x":91,"y":25, "accepts":["RW"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
-        {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
-        {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
-        {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
+        {"id":"RW",  "label":"RW",  "x":86,"y":9,  "accepts":["RW","AM"],        "side":"R"},
+        {"id":"LWB", "label":"LWB", "x":9, "y":32, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
+        {"id":"CM1", "label":"CM",  "x":30,"y":38, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM"],             "side":"N"},
+        {"id":"CM2", "label":"CM",  "x":70,"y":38, "accepts":["CM"],             "side":"R"},
+        {"id":"RWB", "label":"RWB", "x":91,"y":32, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
+        {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
+        {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
+        {"id":"RCB", "label":"RCB", "x":75,"y":62, "accepts":["RCB","CB"],       "side":"R"},
+        {"id":"GK",  "label":"GK",  "x":50,"y":83, "accepts":["GK"],             "side":"N"},
     ],
     "4-1-4-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
@@ -211,10 +214,10 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"DM",  "label":"DM",  "x":50,"y":36, "accepts":["DM"],             "side":"N"},
         {"id":"CM",  "label":"CM",  "x":70,"y":33, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":26, "accepts":["RW"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
 }
@@ -279,6 +282,17 @@ def compute_role_scores(df:pd.DataFrame)->pd.DataFrame:
                     if vals: df.at[idx,col_out]=float(np.average(vals,weights=wts))
     return df
 
+
+# Fallback canonical: maps raw token → ordered list of slot labels to try when player unassigned
+FALLBACK_CANON:dict[str,list]={
+    "DMF":["DM","CM"],"LDMF":["DM","CM"],"RDMF":["DM","CM"],
+    "LCMF":["CM","DM"],"RCMF":["CM","DM"],
+    "AMF":["AM","CM","LW","RW"],"LAMF":["LW","AM","RW"],"RAMF":["RW","AM","LW"],
+    "LW":["LW","AM"],"RW":["RW","AM"],"LWF":["LW","AM"],"RWF":["RW","AM"],
+    "CF":["ST"],"GK":["GK"],
+    "CB":["CB","LCB","RCB"],"LCB":["LCB","CB"],"RCB":["RCB","CB"],
+    "LB":["LB","LWB"],"RB":["RB","RWB"],"LWB":["LWB","LB"],"RWB":["RWB","RB"],
+}
 def assign_players(players:list,formation_key:str)->tuple[dict,list]:
     slots=FORMATIONS.get(formation_key,FORMATIONS["4-2-3-1"])
     by_label:dict[str,list]={}
@@ -331,11 +345,39 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
             for sid,p in starters: slot_map[sid].append(p)
             slot_map[slot_list[0]["id"]].extend(depth_rem)
 
+
+    # ── Fix 4: 4-back CB redistribution by position token ────────────────────
+    FOUR_BACK_FORMATIONS={"4-2-3-1","4-3-3","4-4-2","4-1-4-1","3-4-3"}
+    if formation_key in FOUR_BACK_FORMATIONS:
+        cb1_id=next((s["id"] for s in slots if s["id"]=="CB1"),None)
+        cb2_id=next((s["id"] for s in slots if s["id"]=="CB2"),None)
+        if cb1_id and cb2_id:
+            all_cbs4=[]
+            for sid in (cb1_id,cb2_id):
+                all_cbs4.extend(slot_map.get(sid,[]))
+            all_cbs4.sort(key=lambda p:-float(p.get("Minutes played") or 0))
+            lcb_p=[p for p in all_cbs4 if _tok(p.get("Position",""))=="LCB"]
+            rcb_p=[p for p in all_cbs4 if _tok(p.get("Position",""))=="RCB"]
+            cb_p =[p for p in all_cbs4 if _tok(p.get("Position",""))=="CB"]
+            oth_p=[p for p in all_cbs4 if _tok(p.get("Position","")) not in {"CB","LCB","RCB"}]
+            # Left slot = CB1, Right slot = CB2
+            left=[]; right=[]
+            # Assign specific sided players first
+            left.extend(lcb_p); right.extend(rcb_p)
+            # Distribute pure CB alternately starting with left (most mins first)
+            for i,p in enumerate(cb_p):
+                (left if i%2==0 else right).append(p)
+            # Any others (OOP) fill by minutes alternately
+            for i,p in enumerate(oth_p):
+                (left if i%2==0 else right).append(p)
+            slot_map[cb1_id]=left
+            slot_map[cb2_id]=right
+    # ── End Fix 4 ────────────────────────────────────────────────────────────
     # ── Fix 6: 3-back CB redistribution ──────────────────────────────────────
     # For 3-back formations, re-distribute CB/LCB/RCB players correctly:
     # Pure CB → middle; LCB → left; RCB → right.
     # If no pure CB, alternate by minutes: 1st→CB, 2nd→RCB, 3rd→CB, 4th→RCB...
-    THREE_BACK_FORMATIONS={"3-5-2","3-4-1-2"}
+    THREE_BACK_FORMATIONS={"3-5-2","3-4-1-2","3-4-3"}
     if formation_key in THREE_BACK_FORMATIONS:
         lcb_id=next((s["id"] for s in slots if s["id"]=="LCB"),None)
         cb_id =next((s["id"] for s in slots if s["id"]=="CB"), None)
@@ -381,6 +423,35 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
         for p in ps:
             p["_oop"]=not primary_fits(p,slot_def) if slot_def else False
             p["_primary_pos"]=_tok(p.get("Position",""))
+
+    # ── Fallback pass: cascade remaining players into best-fit slot ─────────
+    # Players who couldn't fit their primary slot get assigned to nearest slot
+    # that exists in the formation, marked as OOP. No one goes to depth unless
+    # there is genuinely no slot that can accommodate them.
+    by_label_id:dict[str,list]={s["label"]:[] for s in slots}
+    for s in slots: by_label_id[s["label"]].append(s["id"])
+
+    remaining_after_main=[p for p in players if p["_key"] not in assigned]
+    remaining_after_main.sort(key=lambda p:-float(p.get("Minutes played") or 0))
+    for p in remaining_after_main:
+        tok=_tok(p.get("Position",""))
+        placed=False
+        for try_label in FALLBACK_CANON.get(tok,[tok]):
+            if try_label in by_label_id:
+                # pick the slot with label try_label that has fewest players so far
+                best_sid=min(by_label_id[try_label],
+                             key=lambda sid:len(slot_map.get(sid,[])))
+                slot_map.setdefault(best_sid,[]).append(p)
+                assigned.add(p["_key"])
+                placed=True
+                break
+        if not placed:
+            # Try any slot as absolute last resort (pick least populated)
+            best_sid=min((s["id"] for s in slots),
+                         key=lambda sid:len(slot_map.get(sid,[])))
+            slot_map.setdefault(best_sid,[]).append(p)
+            assigned.add(p["_key"])
+    # ── End fallback pass ────────────────────────────────────────────────────
 
     depth=[p for p in players if p["_key"] not in assigned]
     depth.sort(key=lambda p:-float(p.get("Minutes played") or 0))
@@ -591,16 +662,16 @@ def render_pitch(
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     # Landscape pitch: GK left → ST right, full-width, smart node anchoring.
     if canva:
-        bsz="18px"; nsz="17px"; ssz="12px"; rsz="11px"
+        bsz="36px"; nsz="34px"; ssz="24px"; rsz="22px"
 
         def make_canva_node_ls(slot)->str:
             lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
             ps_all=slot_map.get(slot["id"],[])
             ps=ps_all[:1] if xi_only else ps_all
             badge=(f'<div style="display:inline-block;padding:3px 12px;'
-                   f'border-radius:5px;background:#374151;'
+                   f'border-radius:8px;background:#374151;'
                    f'color:#ffffff;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
-                   f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
+                   f'margin-bottom:10px;white-space:nowrap;">{slot["label"]}</div>')
             rows=""
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
@@ -614,7 +685,7 @@ def render_pitch(
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
-                mt="margin-top:5px;" if i>0 else ""
+                mt="margin-top:10px;" if i>0 else ""
                 rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
@@ -631,7 +702,7 @@ def render_pitch(
         # Legend bar — sits above the pitch (top strip)
         header=(f'<div style="position:absolute;top:16px;left:{CPX}px;right:{CANVA_W-CPX-CPW}px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
-                f'font-size:13px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
+                f'font-size:22px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
                 f'<span>Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions</span>'
                 f'<span>'
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
