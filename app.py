@@ -629,6 +629,17 @@ def render_pitch(
                f'color:#ef4444;font-size:{bsz};font-weight:900;letter-spacing:.1em;'
                f'margin-bottom:3px;background:rgba(10,15,28,.97);">{slot["label"]}</div>')
         rows=""
+        # Slot-level NEW SIGNING placeholder
+        _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
+        if _slot_ns:
+            _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
+            _sn_sub=_slot_ns.get("sub","")
+            rows+=(f'<div style="color:#f97316;font-size:{nsz};font-weight:800;'
+                    f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;'
+                    f'text-shadow:0 0 8px rgba(0,0,0,1);">{_sn_lbl}</div>')
+            if _sn_sub:
+                rows+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
+                        f'line-height:1.3;">{_sn_sub}</div>')
         for i,p in enumerate(ps):
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
@@ -658,19 +669,9 @@ def render_pitch(
             rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                      else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
             mt="margin-top:5px;" if i>0 else ""
-            ns_html=""
-            if p.get("New Signing"):
-                _ns_lbl=str(p.get("New Signing Label","")).strip() or "NEW SIGNING"
-                _ns_sub=str(p.get("New Signing Sub","")).strip()
-                ns_html=(f'<div style="color:#f97316;font-size:{ssz};font-weight:800;'
-                         f'letter-spacing:.10em;line-height:1.3;text-transform:uppercase;">'
-                         f'{_ns_lbl}</div>')
-                if _ns_sub:
-                    ns_html+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
-                              f'line-height:1.3;">{_ns_sub}</div>')
             rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
                    f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
-                   f'{p["Player"]} {suffix}</div>{ns_html}{pos_html}{stat_html}{rs_html}')
+                   f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
         if not ps:
             rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
         sx=float(slot.get("x",50))
@@ -712,6 +713,16 @@ def render_pitch(
                    f'color:#9ca3af;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
                    f'margin-bottom:5px;white-space:nowrap;user-select:none;">{slot["label"]}</div>')
             rows=""
+            # Slot-level NEW SIGNING placeholder
+            _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
+            if _slot_ns:
+                _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
+                _sn_sub=_slot_ns.get("sub","")
+                rows+=(f'<div style="color:#f97316;font-size:{nsz};font-weight:800;'
+                        f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;">{_sn_lbl}</div>')
+                if _sn_sub:
+                    rows+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
+                            f'line-height:1.3;">{_sn_sub}</div>')
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
@@ -728,19 +739,9 @@ def render_pitch(
                 mt="margin-top:5px;" if i>0 else ""
                 rs_html=(all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
-                ns_html_c=""
-                if p.get("New Signing"):
-                    _ns_lbl=str(p.get("New Signing Label","")).strip() or "NEW SIGNING"
-                    _ns_sub=str(p.get("New Signing Sub","")).strip()
-                    ns_html_c=(f'<div style="color:#f97316;font-size:{ssz};font-weight:800;'
-                               f'letter-spacing:.10em;line-height:1.3;text-transform:uppercase;">'
-                               f'{_ns_lbl}</div>')
-                    if _ns_sub:
-                        ns_html_c+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
-                                    f'line-height:1.3;">{_ns_sub}</div>')
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
-                       f'{p["Player"]}{suffix}</div>{ns_html_c}{rs_html}')
+                       f'{p["Player"]}{suffix}</div>{rs_html}')
             if not ps:
                 rows=f'<div style="color:#4b5563;font-size:{ssz};">&#8212;</div>'
             return (f'<div style="position:absolute;left:{lx}px;top:{ly}px;'
@@ -921,7 +922,7 @@ document.fonts.ready.then(function(){{
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
              "last_team":None,"last_formation":None,"edit_contract_player":None,
-             "hide_pos_override":set()}.items():
+             "hide_pos_override":set(),"new_signing":{}}.items():
     if k not in st.session_state: st.session_state[k]=v
 
 def _tog(k,d=False): return st.session_state.get(k,d)
@@ -1029,11 +1030,6 @@ with st.sidebar:
         nl_=st.checkbox("On Loan? (incoming, green)",key="nl_")
         nlo_=st.checkbox("Loaned Out? (yellow)",key="nlo_")
         nyt_=st.checkbox("Youth Player? (grey)",key="nyt_")
-        nns_=st.checkbox("New Signing? (orange label)",key="nns_")
-        nns_lbl_=st.text_input("New Signing label","NEW SIGNING",key="nns_lbl_",
-                               help="e.g. NEW SIGNING or TARGET")
-        nns_sub_=st.text_input("New Signing subtitle (optional)",key="nns_sub_",
-                               help="e.g. Wide Creator U23")
         sl_opts={f"{s['label']} ({s['id']})":s["id"] for s in FORMATIONS.get(formation,[])}
         ns_=st.selectbox("Add to slot",list(sl_opts.keys()),key="ns_")
         if st.button("\u2795 Add Player") and nn.strip():
@@ -1044,9 +1040,6 @@ with st.sidebar:
                    "Contract expires":ne_,"On Loan":"yes" if nl_ else "no",
                    "Loaned Out":"yes" if nlo_ else "no",
                    "Youth Player":"yes" if nyt_ else "no",
-                   "New Signing":"yes" if nns_ else "no",
-                   "New Signing Label":nns_lbl_.strip(),
-                   "New Signing Sub":nns_sub_.strip(),
                    "League":lg,"Team":sel_team}
             st.session_state.slot_map.setdefault(sl_opts[ns_],[]).append(new_p)
             st.rerun()
@@ -1228,39 +1221,31 @@ if all_on:
     else:
         st.markdown("<div style='font-size:9px;color:#374151;'>No slots with multiple players to reorder</div>",unsafe_allow_html=True)
 
-    # ── New Signing label editor ───────────────────────────────────────────────
-    st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:6px;'>NEW SIGNING / TARGET LABEL</div>",
+    # ── New Signing slot label ────────────────────────────────────────────────
+    st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:6px;'>NEW SIGNING / TARGET — add to slot</div>",
                 unsafe_allow_html=True)
+    ns_slot_opts={f"{sl['label']} ({sl['id']})":sl["id"] for sl in slots}
     ns_c1,ns_c2=st.columns([2,2])
     with ns_c1:
-        ns_opts={f"{e['player']['Player']} ({e['lbl']})":e for e in all_on}
-        ns_p_sel=st.selectbox("Player",list(ns_opts.keys()),key="ns_p_sel",label_visibility="visible")
-        ns_e=ns_opts[ns_p_sel]
-        ns_cur=ns_e["player"].get("New Signing","")
-        ns_on=str(ns_cur).strip().lower() in ("yes","y","true","1")
+        ns_slot_sel=st.selectbox("Slot",list(ns_slot_opts.keys()),key="ns_slot_sel",label_visibility="visible")
+        ns_sid=ns_slot_opts[ns_slot_sel]
+        ns_existing=st.session_state.get("new_signing",{}).get(ns_sid)
+        ns_on=bool(ns_existing)
     with ns_c2:
-        ns_lbl_val=st.text_input("Label (caps)",ns_e["player"].get("New Signing Label","NEW SIGNING"),
-                                  key="ns_lbl_val",label_visibility="visible",
+        _def_lbl=ns_existing.get("label","NEW SIGNING") if ns_existing else "NEW SIGNING"
+        _def_sub=ns_existing.get("sub","") if ns_existing else ""
+        ns_lbl_val=st.text_input("Label (caps)",_def_lbl,key="ns_lbl_val",
                                   help="e.g. NEW SIGNING, TARGET, TRIALIST")
-        ns_sub_val=st.text_input("Subtitle (optional)",ns_e["player"].get("New Signing Sub",""),
-                                  key="ns_sub_val",label_visibility="visible",
+        ns_sub_val=st.text_input("Subtitle (optional)",_def_sub,key="ns_sub_val",
                                   help="e.g. Wide Creator U23")
-    ns_btn_lbl=("✅ Showing label — click to remove" if ns_on else "🟠 Add new signing label")
+    ns_btn_lbl="✅ Showing — click to remove" if ns_on else "🟠 Add to slot"
     if st.button(ns_btn_lbl,key="ns_toggle_btn"):
-        pk=ns_e["player"]["_key"]; sid=ns_e["sid"]
-        def _patch_ns(p):
-            if p["_key"]==pk:
-                if ns_on:
-                    p["New Signing"]="no"; p["New Signing Label"]=""; p["New Signing Sub"]=""
-                else:
-                    p["New Signing"]="yes"
-                    p["New Signing Label"]=ns_lbl_val.strip() or "NEW SIGNING"
-                    p["New Signing Sub"]=ns_sub_val.strip()
-        if sid=="_depth":
-            for p in st.session_state.depth: _patch_ns(p)
+        ns_dict=st.session_state.setdefault("new_signing",{})
+        if ns_on:
+            ns_dict.pop(ns_sid,None)
         else:
-            for p in st.session_state.slot_map.get(sid,[]): _patch_ns(p)
-        st.rerun()
+            ns_dict[ns_sid]={"label":ns_lbl_val.strip() or "NEW SIGNING","sub":ns_sub_val.strip()}
+        st.session_state.new_signing=ns_dict; st.rerun()
 
 
 # ── Full squad ─────────────────────────────────────────────────────────────────
