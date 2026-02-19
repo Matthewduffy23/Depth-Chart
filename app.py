@@ -155,10 +155,10 @@ FORMATIONS:dict[str,list[dict]]={
     "4-4-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
-        {"id":"LW",  "label":"LW",  "x":9, "y":34, "accepts":["LW","AM"],        "side":"L"},
+        {"id":"LW",  "label":"LW",  "x":9, "y":34, "accepts":["LW","AM"],        "side":"L","native_toks":["LAMF","LWF","LW"]},
         {"id":"CM1", "label":"CM",  "x":34,"y":38, "accepts":["CM"],             "side":"L"},
         {"id":"CM2", "label":"CM",  "x":66,"y":38, "accepts":["CM"],             "side":"R"},
-        {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW","AM"],        "side":"R"},
+        {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW","AM"],        "side":"R","native_toks":["RAMF","RWF","RW"]},
         {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
@@ -181,7 +181,7 @@ FORMATIONS:dict[str,list[dict]]={
     "3-4-1-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":8,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":8,  "accepts":["ST"],             "side":"R"},
-        {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N","priority_toks":["AMF"]},
+        {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N","priority_toks":["AMF"],"native_toks":["AMF"]},
         {"id":"LWB", "label":"LWB", "x":9, "y":35, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
         {"id":"CM1", "label":"CM",  "x":34,"y":39, "accepts":["CM"],             "side":"L"},
         {"id":"CM2", "label":"CM",  "x":66,"y":39, "accepts":["CM"],             "side":"R"},
@@ -461,6 +461,9 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
         for p in ps:
             p["_oop"]=not primary_fits(p,slot_def) if slot_def else False
             p["_primary_pos"]=_tok(p.get("Position",""))
+            # _show_pos: also show position when tok is not native to this slot
+            native=slot_def.get("native_toks") if slot_def else None
+            p["_show_pos"]=(p["_oop"] or (native is not None and p["_primary_pos"] not in native))
 
     depth=[p for p in players if p["_key"] not in assigned]
     depth.sort(key=lambda p:-float(p.get("Minutes played") or 0))
@@ -618,7 +621,7 @@ def render_pitch(
             col="#ffffff" if white_names else player_css_color(yrs,loan)
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             _hpo=st.session_state.get('hide_pos_override',set())
-            oop_s=f" ({p['_primary_pos']})" if (p.get('_oop') and p.get('_key','') not in _hpo) else ''
+            oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
             if loan:
                 suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
             else:
@@ -672,7 +675,7 @@ def render_pitch(
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     # Landscape pitch: GK left → ST right, full-width, smart node anchoring.
     if canva:
-        bsz="28px"; nsz="26px"; ssz="19px"; rsz="18px"
+        bsz="30px"; nsz="28px"; ssz="21px"; rsz="20px"
 
         def make_canva_node_ls(slot)->str:
             lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
@@ -690,7 +693,7 @@ def render_pitch(
                 col="#ffffff" if white_names else player_css_color(yrs,loan)
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 _hpo=st.session_state.get("hide_pos_override",set())
-                oop_s=f" ({p['_primary_pos']})" if (p.get('_oop') and p.get('_key','') not in _hpo) else ''
+                oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
                 if loan:
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
@@ -712,7 +715,7 @@ def render_pitch(
         # Legend bar — sits above the pitch (top strip)
         header=(f'<div style="position:absolute;top:16px;left:{CPX}px;right:{CANVA_W-CPX-CPW}px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
-                f'font-size:19px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
+                f'font-size:21px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
                 f'<span>Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions</span>'
                 f'<span>'
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
