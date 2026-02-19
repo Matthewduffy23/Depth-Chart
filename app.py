@@ -156,9 +156,8 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
         {"id":"LW",  "label":"LW",  "x":9, "y":34, "accepts":["LW","AM"],        "side":"L"},
-        {"id":"CM1", "label":"CM",  "x":30,"y":38, "accepts":["CM"],             "side":"L"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM"],             "side":"N"},
-        {"id":"CM2", "label":"CM",  "x":70,"y":38, "accepts":["CM"],             "side":"R"},
+        {"id":"CM1", "label":"CM",  "x":34,"y":38, "accepts":["CM"],             "side":"L"},
+        {"id":"CM2", "label":"CM",  "x":66,"y":38, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW","AM"],        "side":"R"},
         {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
@@ -184,9 +183,8 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"ST2", "label":"ST",  "x":65,"y":8,  "accepts":["ST"],             "side":"R"},
         {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N"},
         {"id":"LWB", "label":"LWB", "x":9, "y":35, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
-        {"id":"CM1", "label":"CM",  "x":30,"y":39, "accepts":["CM"],             "side":"L"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM"],             "side":"N"},
-        {"id":"CM2", "label":"CM",  "x":70,"y":39, "accepts":["CM"],             "side":"R"},
+        {"id":"CM1", "label":"CM",  "x":34,"y":39, "accepts":["CM"],             "side":"L"},
+        {"id":"CM2", "label":"CM",  "x":66,"y":39, "accepts":["CM"],             "side":"R"},
         {"id":"RWB", "label":"RWB", "x":91,"y":35, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":61, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":65, "accepts":["CB","LCB","RCB"], "side":"N"},
@@ -194,13 +192,12 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"GK",  "label":"GK",  "x":50,"y":82, "accepts":["GK"],             "side":"N"},
     ],
     "3-4-3":[
-        {"id":"LW",  "label":"LW",  "x":14,"y":9,  "accepts":["LW","AM"],        "side":"L"},
+        {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW","AM"],        "side":"L"},
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
-        {"id":"RW",  "label":"RW",  "x":86,"y":9,  "accepts":["RW","AM"],        "side":"R"},
+        {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW","AM"],        "side":"R"},
         {"id":"LWB", "label":"LWB", "x":9, "y":32, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
-        {"id":"CM1", "label":"CM",  "x":30,"y":38, "accepts":["CM"],             "side":"L"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM"],             "side":"N"},
-        {"id":"CM2", "label":"CM",  "x":70,"y":38, "accepts":["CM"],             "side":"R"},
+        {"id":"CM",  "label":"CM",  "x":38,"y":38, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":62,"y":38, "accepts":["DM"],             "side":"R"},
         {"id":"RWB", "label":"RWB", "x":91,"y":32, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
@@ -453,6 +450,13 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
             assigned.add(p["_key"])
     # ── End fallback pass ────────────────────────────────────────────────────
 
+    # Re-flag _oop and _primary_pos for ALL players now (including fallback-placed)
+    for sid,ps in slot_map.items():
+        slot_def=next((s for s in slots if s["id"]==sid),None)
+        for p in ps:
+            p["_oop"]=not primary_fits(p,slot_def) if slot_def else False
+            p["_primary_pos"]=_tok(p.get("Position",""))
+
     depth=[p for p in players if p["_key"] not in assigned]
     depth.sort(key=lambda p:-float(p.get("Minutes played") or 0))
     return slot_map,depth
@@ -565,8 +569,9 @@ def canva_slot_px(slot_x:float, slot_y:float)->tuple[int,int,str,str]:
     Returns: (lx, ly, css_transform, text_align)
     """
     Y_MIN,Y_MAX=7.0,87.0
-    INNER_PAD_X=60   # inset from pitch border for player text
-    INNER_PAD_Y=30
+    # Very small inner padding so nodes spread to pitch edges
+    INNER_PAD_X=20   # inset from pitch border for player text
+    INNER_PAD_Y=12
     lx_pct = 1.0 - (slot_y - Y_MIN) / (Y_MAX - Y_MIN)  # 0=GK-side,1=ST-side
     lx = CPX + INNER_PAD_X + lx_pct * (CPW - 2*INNER_PAD_X)
     ly_pct = slot_x / 100.0
@@ -577,8 +582,8 @@ def canva_slot_px(slot_x:float, slot_y:float)->tuple[int,int,str,str]:
     elif lx_pct > 0.88: tx="translate(-100%,-50%)"; ta="right"  # ST: anchor right edge
     else:               tx="translate(-50%,-50%)"; ta="center"
     # Vertical: top edge → text grows down; bottom → text grows up
-    if ly_pct < 0.15:   tx=tx.replace("-50%)",  "0)")            # top: grow down
-    elif ly_pct > 0.85: tx=tx.replace("-50%)",  "-100%)")        # bottom: grow up
+    if ly_pct < 0.12:   tx=tx.replace("-50%)",  "0)")            # top: grow down
+    elif ly_pct > 0.88: tx=tx.replace("-50%)",  "-100%)")        # bottom: grow up
     return round(lx), round(ly), tx, ta
 
 # ── Render pitch ───────────────────────────────────────────────────────────────
@@ -662,7 +667,7 @@ def render_pitch(
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     # Landscape pitch: GK left → ST right, full-width, smart node anchoring.
     if canva:
-        bsz="36px"; nsz="34px"; ssz="24px"; rsz="22px"
+        bsz="22px"; nsz="20px"; ssz="13px"; rsz="12px"
 
         def make_canva_node_ls(slot)->str:
             lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
@@ -671,7 +676,7 @@ def render_pitch(
             badge=(f'<div style="display:inline-block;padding:3px 12px;'
                    f'border-radius:8px;background:#374151;'
                    f'color:#ffffff;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
-                   f'margin-bottom:10px;white-space:nowrap;">{slot["label"]}</div>')
+                   f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
             rows=""
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
@@ -685,7 +690,7 @@ def render_pitch(
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
-                mt="margin-top:10px;" if i>0 else ""
+                mt="margin-top:5px;" if i>0 else ""
                 rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
@@ -702,7 +707,7 @@ def render_pitch(
         # Legend bar — sits above the pitch (top strip)
         header=(f'<div style="position:absolute;top:16px;left:{CPX}px;right:{CANVA_W-CPX-CPW}px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
-                f'font-size:22px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
+                f'font-size:13px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
                 f'<span>Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions</span>'
                 f'<span>'
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
