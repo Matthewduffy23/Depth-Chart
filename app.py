@@ -131,25 +131,25 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"LW",  "label":"LW",  "x":13,"y":25, "accepts":["LW","AM"],        "side":"L"},
         {"id":"AM",  "label":"AM",  "x":50,"y":27, "accepts":["AM"],             "side":"N"},
         {"id":"RW",  "label":"RW",  "x":87,"y":25, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"DM",  "label":"DM",  "x":35,"y":43, "accepts":["DM"],             "side":"L"},
-        {"id":"CM",  "label":"CM",  "x":65,"y":43, "accepts":["CM"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"DM",  "label":"DM",  "x":35,"y":46, "accepts":["DM"],             "side":"L"},
+        {"id":"CM",  "label":"CM",  "x":65,"y":46, "accepts":["CM"],             "side":"R"},
+        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-3-3":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW"],             "side":"L"},
         {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW"],             "side":"R"},
-        {"id":"CM",  "label":"CM",  "x":30,"y":36, "accepts":["CM"],             "side":"L"},
-        {"id":"AM",  "label":"AM",  "x":70,"y":36, "accepts":["AM"],             "side":"R"},
-        {"id":"DM",  "label":"DM",  "x":50,"y":46, "accepts":["DM"],             "side":"N"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"CM",  "label":"CM",  "x":22,"y":40, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":40, "accepts":["DM"],             "side":"N"},
+        {"id":"AM",  "label":"AM",  "x":78,"y":40, "accepts":["AM"],             "side":"R"},
+        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-4-2":[
@@ -159,10 +159,10 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"CM1", "label":"CM",  "x":34,"y":38, "accepts":["CM"],             "side":"L"},
         {"id":"CM2", "label":"CM",  "x":66,"y":38, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "3-5-2":[
@@ -198,10 +198,10 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"AM",  "label":"AM",  "x":50,"y":25, "accepts":["AM"],             "side":"N"},
         {"id":"CM2", "label":"CM",  "x":70,"y":33, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":25, "accepts":["RW"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
     "4-1-4-1":[
@@ -211,10 +211,10 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"DM",  "label":"DM",  "x":50,"y":36, "accepts":["DM"],             "side":"N"},
         {"id":"CM",  "label":"CM",  "x":70,"y":33, "accepts":["CM"],             "side":"R"},
         {"id":"RW",  "label":"RW",  "x":91,"y":26, "accepts":["RW"],             "side":"R"},
-        {"id":"LB",  "label":"LB",  "x":9, "y":58, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"LB",  "label":"LB",  "x":9, "y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
-        {"id":"RB",  "label":"RB",  "x":91,"y":58, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"RB",  "label":"RB",  "x":91,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
 }
@@ -331,6 +331,51 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
             for sid,p in starters: slot_map[sid].append(p)
             slot_map[slot_list[0]["id"]].extend(depth_rem)
 
+    # ── Fix 6: 3-back CB redistribution ──────────────────────────────────────
+    # For 3-back formations, re-distribute CB/LCB/RCB players correctly:
+    # Pure CB → middle; LCB → left; RCB → right.
+    # If no pure CB, alternate by minutes: 1st→CB, 2nd→RCB, 3rd→CB, 4th→RCB...
+    THREE_BACK_FORMATIONS={"3-5-2","3-4-1-2"}
+    if formation_key in THREE_BACK_FORMATIONS:
+        lcb_id=next((s["id"] for s in slots if s["id"]=="LCB"),None)
+        cb_id =next((s["id"] for s in slots if s["id"]=="CB"), None)
+        rcb_id=next((s["id"] for s in slots if s["id"]=="RCB"),None)
+        if lcb_id and cb_id and rcb_id:
+            # Collect all players currently in these three slots
+            all_cbs=[]
+            for sid in (lcb_id,cb_id,rcb_id):
+                all_cbs.extend(slot_map.get(sid,[]))
+            # Sort by minutes descending
+            all_cbs.sort(key=lambda p:-float(p.get("Minutes played") or 0))
+            # Separate by primary position token
+            pure_cb =[p for p in all_cbs if _tok(p.get("Position",""))=="CB"]
+            pure_lcb=[p for p in all_cbs if _tok(p.get("Position",""))=="LCB"]
+            pure_rcb=[p for p in all_cbs if _tok(p.get("Position",""))=="RCB"]
+            other   =[p for p in all_cbs if _tok(p.get("Position","")) not in {"CB","LCB","RCB"}]
+            # Fill slots:
+            # LCB slot: LCB players first, then overflow from other
+            # CB slot:  pure CB players first
+            # RCB slot: RCB players first
+            # If pure_cb empty, distribute non-LCB/RCB players alternately CB→RCB
+            cb_starters=[]; rcb_starters=[]; lcb_starters=list(pure_lcb)
+            if pure_cb:
+                cb_starters=pure_cb
+                rcb_starters=pure_rcb
+                # Any remaining RCB go to LCB depth if not enough LCB players
+                if not lcb_starters: lcb_starters=other
+            else:
+                # No pure CB — interleave remaining (sorted by mins) between CB and RCB
+                remaining=sorted([p for p in all_cbs if p not in pure_lcb],
+                                 key=lambda p:-float(p.get("Minutes played") or 0))
+                for i,p in enumerate(remaining):
+                    if i%2==0: cb_starters.append(p)
+                    else:      rcb_starters.append(p)
+            # Assign
+            slot_map[lcb_id]=lcb_starters if lcb_starters else other
+            slot_map[cb_id] =cb_starters
+            slot_map[rcb_id]=rcb_starters
+    # ── End Fix 6 ────────────────────────────────────────────────────────────
+
     for sid,ps in slot_map.items():
         slot_def=next((s for s in slots if s["id"]==sid),None)
         for p in ps:
@@ -401,16 +446,16 @@ PORTRAIT_SVG="""
 # For the Canva slide we render a landscape SVG pitch occupying most of the slide:
 # Pitch block: 1520px wide × 870px tall, centred in 1920×1080
 CANVA_W, CANVA_H = 1920, 1080
-# Pitch draw area within Canva (GK on left, ST on right)
-# Maximise pitch area - tiny margins top/bottom for legend only
-CPX, CPY = 60, 55       # top-left of pitch (minimal top margin)
-CPW, CPH = 1800, 940    # pitch width × height (almost full slide)
+# Landscape pitch: GK left → ST right, fills almost all slide
+# Tight margins: 40px sides, 80px top/bottom (for legend bar)
+CPX, CPY = 40, 78       # top-left of pitch
+CPW, CPH = 1840, 924    # pitch width × height
 # penalty area proportions
-CP_PAW = round(CPW * 0.12)  # penalty area width
-CP_PAH = round(CPH * 0.38)
-CP_GAW = round(CPW * 0.04)
-CP_GAH = round(CPH * 0.20)
-CP_CR  = round(min(CPW,CPH) * 0.07)  # centre circle radius
+CP_PAW = round(CPW * 0.11)
+CP_PAH = round(CPH * 0.40)
+CP_GAW = round(CPW * 0.035)
+CP_GAH = round(CPH * 0.22)
+CP_CR  = round(min(CPW,CPH) * 0.08)
 
 def canva_landscape_svg()->str:
     """Landscape pitch SVG for 1920×1080 canvas"""
@@ -440,20 +485,30 @@ def canva_landscape_svg()->str:
         f'</svg>'
     )
 
-def canva_slot_px(slot_x:float, slot_y:float)->tuple[int,int]:
-    """Portrait % (attack top=small y) → landscape px (GK left=small lx)
-    GK at y≈84 → lx small; ST at y≈9 → lx large
-    Left wing (x≈13) → ly small (top); right wing (x≈87) → ly large (bottom)
+def canva_slot_px(slot_x:float, slot_y:float)->tuple[int,int,str,str]:
+    """Portrait % → landscape px + smart CSS anchor for nodes.
+    Portrait y%: small=attack(ST), large=defence(GK)
+    Landscape: GK → left side (small lx), ST → right side (large lx)
+    Portrait x%: small=left wing (LW), large=right wing (RW)
+    Landscape: LW → top (small ly), RW → bottom (large ly)
+    Returns: (lx, ly, css_transform, text_align)
     """
     Y_MIN,Y_MAX=7.0,87.0
-    # Attack (y=9) → right side (high lx); defence (y=84) → left (low lx)
-    lx_pct = (slot_y - Y_MIN) / (Y_MAX - Y_MIN)   # 0=attack, 1=defence
-    lx_pct = 1.0 - lx_pct   # flip: 1=attack(right), 0=defence(left)
-    # Spread lx across pitch with padding
-    lx = CPX + 40 + lx_pct * (CPW - 80)
-    # portrait x (0=left/top, 100=right/bottom) → pitch y
-    ly = CPY + 20 + (slot_x / 100.0) * (CPH - 40)
-    return round(lx), round(ly)
+    INNER_PAD_X=60   # inset from pitch border for player text
+    INNER_PAD_Y=30
+    lx_pct = 1.0 - (slot_y - Y_MIN) / (Y_MAX - Y_MIN)  # 0=GK-side,1=ST-side
+    lx = CPX + INNER_PAD_X + lx_pct * (CPW - 2*INNER_PAD_X)
+    ly_pct = slot_x / 100.0
+    ly = CPY + INNER_PAD_Y + ly_pct * (CPH - 2*INNER_PAD_Y)
+    # Smart anchor: keep nodes inside pitch boundaries
+    # Horizontal: GK side → text grows right; ST side → text grows left; else centre
+    if lx_pct < 0.12:   tx="translate(0,-50%)";   ta="left"   # GK: anchor left edge
+    elif lx_pct > 0.88: tx="translate(-100%,-50%)"; ta="right"  # ST: anchor right edge
+    else:               tx="translate(-50%,-50%)"; ta="center"
+    # Vertical: top edge → text grows down; bottom → text grows up
+    if ly_pct < 0.15:   tx=tx.replace("-50%)",  "0)")            # top: grow down
+    elif ly_pct > 0.85: tx=tx.replace("-50%)",  "-100%)")        # bottom: grow up
+    return round(lx), round(ly), tx, ta
 
 # ── Render pitch ───────────────────────────────────────────────────────────────
 def render_pitch(
@@ -481,7 +536,8 @@ def render_pitch(
             loan=is_loan(p); fw="800" if i==0 else "500"
             col="#ffffff" if white_names else player_css_color(yrs,loan)
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
-            oop_s=f" ({p['_primary_pos']})" if p.get('_oop') else ''
+            _hpo=st.session_state.get('hide_pos_override',set())
+            oop_s=f" ({p['_primary_pos']})" if (p.get('_oop') and p.get('_key','') not in _hpo) else ''
             if loan:
                 suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
             else:
@@ -533,65 +589,18 @@ def render_pitch(
         return s
 
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
-    # Portrait pitch centred in 1920×1080, scaled up.
-    # Badge style: gray rounded rect (matching reference image).
-    # Larger fonts, generous spacing, no title.
+    # Landscape pitch: GK left → ST right, full-width, smart node anchoring.
     if canva:
-        # Canva pitch dimensions — portrait pitch centred in 1920×1080
-        # Pitch sits in centre, ~900px wide × ~1020px tall (aspect ~1:1.42)
-        CPW2=900; CPH2=round(CPW2*1.42)  # ~1278px — too tall, scale down
-        # Fit height to slide with margins top/bottom for legend
-        CPH2=960; CPW2=round(CPH2/1.42)  # ~676px wide
-        # Centre on slide
-        CP_LEFT=round((CANVA_W-CPW2)/2)  # ~622px
-        CP_TOP=round((CANVA_H-CPH2)/2)   # ~60px
+        bsz="18px"; nsz="17px"; ssz="12px"; rsz="11px"
 
-        bsz="20px"; nsz="19px"; ssz="13px"; rsz="11px"
-
-        def canva_portrait_svg2()->str:
-            """Same proportional pitch as portrait but scaled to CPW2×CPH2"""
-            ox,oy=CP_LEFT,CP_TOP; pw,ph=CPW2,CPH2
-            # Scale the viewBox coords (0-100 x, 0-142 y) to px
-            sx=pw/100.0; sy=ph/142.0
-            def vx(x): return round(ox+x*sx)
-            def vy(y): return round(oy+y*sy)
-            cx2=vx(50); cy2=vy(71)
-            cr=round(10*sx)  # centre circle radius
-            return (
-                f'<svg style="position:absolute;left:0;top:0;width:{CANVA_W}px;height:{CANVA_H}px;'
-                f'pointer-events:none;z-index:1;" viewBox="0 0 {CANVA_W} {CANVA_H}">'
-                # pitch background
-                f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="#111827" opacity=".9"/>'
-                # outer border
-                f'<rect x="{ox}" y="{oy}" width="{pw}" height="{ph}" fill="none" stroke="#374151" stroke-width="2"/>'
-                # halfway line
-                f'<line x1="{vx(2)}" y1="{vy(71)}" x2="{vx(98)}" y2="{vy(71)}" stroke="#374151" stroke-width="1.2"/>'
-                # centre circle
-                f'<circle cx="{cx2}" cy="{cy2}" r="{cr}" fill="none" stroke="#374151" stroke-width="1.2"/>'
-                f'<circle cx="{cx2}" cy="{cy2}" r="4" fill="#374151"/>'
-                # top pen area
-                f'<rect x="{vx(22)}" y="{vy(2)}" width="{round(56*sx)}" height="{round(18*sy)}" fill="none" stroke="#374151" stroke-width="1.2"/>'
-                f'<rect x="{vx(36)}" y="{vy(2)}" width="{round(28*sx)}" height="{round(7*sy)}"  fill="none" stroke="#374151" stroke-width=".8"/>'
-                # bottom pen area
-                f'<rect x="{vx(22)}" y="{vy(122)}" width="{round(56*sx)}" height="{round(18*sy)}" fill="none" stroke="#374151" stroke-width="1.2"/>'
-                f'<rect x="{vx(36)}" y="{vy(133)}" width="{round(28*sx)}" height="{round(7*sy)}"  fill="none" stroke="#374151" stroke-width=".8"/>'
-                f'</svg>'
-            )
-
-        def make_canva_node2(slot)->str:
-            # Convert slot % position to absolute px on the centred portrait pitch
-            sx2=float(slot["x"]); sy2=float(slot["y"])
-            px=round(CP_LEFT + sx2/100.0*CPW2)
-            py=round(CP_TOP  + sy2/100.0*CPH2)
-
+        def make_canva_node_ls(slot)->str:
+            lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
             ps_all=slot_map.get(slot["id"],[])
             ps=ps_all[:1] if xi_only else ps_all
-
-            # Badge: gray rounded rect style (like reference image)
-            badge=(f'<div style="display:inline-block;padding:4px 14px;'
-                   f'border-radius:6px;background:#374151;'
-                   f'color:#ffffff;font-size:{bsz};font-weight:900;letter-spacing:.08em;'
-                   f'margin-bottom:6px;">{slot["label"]}</div>')
+            badge=(f'<div style="display:inline-block;padding:3px 12px;'
+                   f'border-radius:5px;background:#374151;'
+                   f'color:#ffffff;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
+                   f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
             rows=""
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
@@ -599,51 +608,43 @@ def render_pitch(
                 loan=is_loan(p); fw="700" if i==0 else "400"
                 col="#ffffff" if white_names else player_css_color(yrs,loan)
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
-                oop_s=f" ({p['_primary_pos']})" if p.get('_oop') else ''
+                _hpo=st.session_state.get("hide_pos_override",set())
+                oop_s=f" ({p['_primary_pos']})" if (p.get('_oop') and p.get('_key','') not in _hpo) else ''
                 if loan:
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
-                mt="margin-top:6px;" if i>0 else ""
+                mt="margin-top:5px;" if i>0 else ""
                 rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
-                rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
-                       f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,.9);">'
+                rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
+                       f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
                        f'{p["Player"]}{suffix}</div>{rs_html}')
             if not ps:
-                rows=f'<div style="color:#374151;font-size:{ssz};">&#8212;</div>'
-
-            # Edge alignment
-            talign="left" if sx2<20 else ("right" if sx2>80 else "center")
-            mxw="240px"
-            return (f'<div style="position:absolute;left:{px}px;top:{py}px;'
-                    f'transform:translate(-50%,-50%);text-align:{talign};'
-                    f'min-width:170px;max-width:{mxw};z-index:10;">'
+                rows=f'<div style="color:#4b5563;font-size:{ssz};">&#8212;</div>'
+            return (f'<div style="position:absolute;left:{lx}px;top:{ly}px;'
+                    f'transform:{tx};text-align:{ta};z-index:10;">'
                     f'{badge}<div>{rows}</div></div>')
 
-        nodes="".join(make_canva_node2(s) for s in slots)
+        nodes="".join(make_canva_node_ls(s) for s in slots)
 
-        # Header bar: how-to-read + legend (matching reference image top bar style)
-        header=(f'<div style="position:absolute;top:14px;left:30px;right:30px;'
+        # Legend bar — sits above the pitch (top strip)
+        header=(f'<div style="position:absolute;top:16px;left:{CPX}px;right:{CANVA_W-CPX-CPW}px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
-                f'font-size:14px;color:#6b7280;letter-spacing:.04em;">'
+                f'font-size:13px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
                 f'<span>Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions</span>'
                 f'<span>'
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
                 f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&ensp;'
                 f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
-                f'<span style="color:#22c55e;font-weight:700;">On Loan</span>'
+                f'<span style="color:#22c55e;font-weight:700;">On Loan</span>&ensp;'
+                f'<span style="color:#6b7280;">{league} · {formation}</span>'
                 f'</span></div>')
-
-        # Formation label bottom-right
-        formation_lbl=(f'<div style="position:absolute;bottom:14px;right:30px;'
-                       f'font-size:16px;color:#4b5563;letter-spacing:.06em;z-index:20;">'
-                       f'{league}&nbsp;·&nbsp;{formation}</div>')
 
         return (f'<div id="pitch-root" style="font-family:Montserrat,sans-serif;color:#fff;'
                 f'background:{BG};width:{CANVA_W}px;height:{CANVA_H}px;position:relative;'
                 f'overflow:hidden;">'
-                f'{canva_portrait_svg2()}{header}{nodes}{formation_lbl}</div>')
+                f'{canva_landscape_svg()}{header}{nodes}</div>')
 
     # ── PORTRAIT mode ─────────────────────────────────────────────────────────
     bsz="15px"; nsz="14px"; ssz="9px"; rsz="8px"
@@ -796,7 +797,8 @@ document.fonts.ready.then(function(){{
 
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
-             "last_team":None,"last_formation":None,"edit_contract_player":None}.items():
+             "last_team":None,"last_formation":None,"edit_contract_player":None,
+             "hide_pos_override":set()}.items():
     if k not in st.session_state: st.session_state[k]=v
 
 def _tog(k,d=False): return st.session_state.get(k,d)
@@ -995,7 +997,7 @@ for p in depth:
     all_on.append({"sid":"_depth","lbl":"DEPTH","player":p})
 
 if all_on:
-    c1,c2,c3=st.columns(3)
+    c1,c2,c3,c4=st.columns(4)
     with c1:
         st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>MOVE</div>",
                     unsafe_allow_html=True)
@@ -1024,6 +1026,24 @@ if all_on:
         if st.button("\u270f\ufe0f Edit Contract"):
             e=ec_opts[ec_sel]
             st.session_state.edit_contract_player={"player":e["player"],"sid":e["sid"]}; st.rerun()
+    with c4:
+        # Per-player position label toggle — only relevant for OOP players
+        oop_players=[e for e in all_on if e["player"].get("_oop")]
+        st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>HIDE POS LABEL</div>",
+                    unsafe_allow_html=True)
+        if oop_players:
+            hpo_opts={f"{e['player']['Player']} ({e['lbl']}) \u26a0\ufe0f":e["player"]["_key"] for e in oop_players}
+            hpo_sel=st.selectbox("",list(hpo_opts.keys()),key="hpo_sel",label_visibility="collapsed")
+            pk=hpo_opts[hpo_sel]
+            hpo=st.session_state.hide_pos_override
+            is_hidden=pk in hpo
+            btn_lbl="\u2705 Showing pos" if not is_hidden else "\u274c Hidden pos"
+            if st.button(btn_lbl,key="hpo_btn"):
+                if is_hidden: hpo.discard(pk)
+                else: hpo.add(pk)
+                st.session_state.hide_pos_override=hpo; st.rerun()
+        else:
+            st.markdown("<div style='font-size:9px;color:#374151;'>No out-of-position players</div>",unsafe_allow_html=True)
 
 # ── Full squad ─────────────────────────────────────────────────────────────────
 if st.session_state.df is not None and team_name:
