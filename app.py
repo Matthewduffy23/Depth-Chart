@@ -168,11 +168,11 @@ FORMATIONS:dict[str,list[dict]]={
     "3-5-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
-        {"id":"LWB", "label":"LWB", "x":9, "y":32, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
+        {"id":"LWB", "label":"LWB", "x":13,"y":32, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
         {"id":"AM",  "label":"AM",  "x":30,"y":36, "accepts":["AM"],             "side":"L"},
         {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM"],             "side":"N"},
         {"id":"CM",  "label":"CM",  "x":70,"y":36, "accepts":["CM"],             "side":"R"},
-        {"id":"RWB", "label":"RWB", "x":91,"y":32, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
+        {"id":"RWB", "label":"RWB", "x":87,"y":32, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
         {"id":"RCB", "label":"RCB", "x":75,"y":62, "accepts":["RCB","CB"],       "side":"R"},
@@ -182,10 +182,10 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"ST1", "label":"ST",  "x":35,"y":8,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":8,  "accepts":["ST"],             "side":"R"},
         {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N","priority_toks":["AMF"],"native_toks":["AMF"]},
-        {"id":"LWB", "label":"LWB", "x":9, "y":35, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
+        {"id":"LWB", "label":"LWB", "x":13,"y":35, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
         {"id":"CM1", "label":"CM",  "x":34,"y":39, "accepts":["CM"],             "side":"L"},
         {"id":"CM2", "label":"CM",  "x":66,"y":39, "accepts":["CM"],             "side":"R"},
-        {"id":"RWB", "label":"RWB", "x":91,"y":35, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
+        {"id":"RWB", "label":"RWB", "x":87,"y":35, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":61, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":65, "accepts":["CB","LCB","RCB"], "side":"N"},
         {"id":"RCB", "label":"RCB", "x":75,"y":61, "accepts":["RCB","CB"],       "side":"R"},
@@ -195,10 +195,10 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW","AM"],        "side":"L"},
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"LWB", "label":"LWB", "x":9, "y":40, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
+        {"id":"LWB", "label":"LWB", "x":13,"y":40, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
         {"id":"CM",  "label":"CM",  "x":38,"y":38, "accepts":["CM"],             "side":"L"},
         {"id":"DM",  "label":"DM",  "x":62,"y":38, "accepts":["DM"],             "side":"R"},
-        {"id":"RWB", "label":"RWB", "x":91,"y":40, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
+        {"id":"RWB", "label":"RWB", "x":87,"y":40, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
         {"id":"RCB", "label":"RCB", "x":75,"y":62, "accepts":["RCB","CB"],       "side":"R"},
@@ -638,11 +638,7 @@ def render_pitch(
             _hpo=st.session_state.get('hide_pos_override',set())
             oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
             lo=is_loaned_out(p); yt=is_youth(p)
-            if lo:
-                suffix=f" LO{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
-            elif yt:
-                suffix=f" Y{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
-            elif loan:
+            if loan:
                 suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
             else:
                 suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
@@ -662,9 +658,19 @@ def render_pitch(
             rs_html=(all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
                      else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
             mt="margin-top:5px;" if i>0 else ""
+            ns_html=""
+            if p.get("New Signing"):
+                _ns_lbl=str(p.get("New Signing Label","")).strip() or "NEW SIGNING"
+                _ns_sub=str(p.get("New Signing Sub","")).strip()
+                ns_html=(f'<div style="color:#f97316;font-size:{ssz};font-weight:800;'
+                         f'letter-spacing:.10em;line-height:1.3;text-transform:uppercase;">'
+                         f'{_ns_lbl}</div>')
+                if _ns_sub:
+                    ns_html+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
+                              f'line-height:1.3;">{_ns_sub}</div>')
             rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
                    f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
-                   f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
+                   f'{p["Player"]} {suffix}</div>{ns_html}{pos_html}{stat_html}{rs_html}')
         if not ps:
             rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
         sx=float(slot.get("x",50))
@@ -702,9 +708,9 @@ def render_pitch(
             ps_all=slot_map.get(slot["id"],[])
             ps=ps_all[:1] if xi_only else ps_all
             badge=(f'<div style="display:inline-block;padding:3px 12px;'
-                   f'border-radius:8px;background:#374151;'
-                   f'color:#ffffff;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
-                   f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
+                   f'border-radius:8px;background:#9ca3af;'
+                   f'color:#9ca3af;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
+                   f'margin-bottom:5px;white-space:nowrap;user-select:none;">{slot["label"]}</div>')
             rows=""
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
@@ -715,20 +721,26 @@ def render_pitch(
                 _hpo=st.session_state.get("hide_pos_override",set())
                 oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
                 lo=is_loaned_out(p); yt=is_youth(p)
-                if lo:
-                    suffix=f" LO{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
-                elif yt:
-                    suffix=f" Y{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
-                elif loan:
+                if loan:
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
                 mt="margin-top:5px;" if i>0 else ""
                 rs_html=(all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (i==0 and show_roles)
                          else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
+                ns_html_c=""
+                if p.get("New Signing"):
+                    _ns_lbl=str(p.get("New Signing Label","")).strip() or "NEW SIGNING"
+                    _ns_sub=str(p.get("New Signing Sub","")).strip()
+                    ns_html_c=(f'<div style="color:#f97316;font-size:{ssz};font-weight:800;'
+                               f'letter-spacing:.10em;line-height:1.3;text-transform:uppercase;">'
+                               f'{_ns_lbl}</div>')
+                    if _ns_sub:
+                        ns_html_c+=(f'<div style="color:#f97316;font-size:{rsz};font-weight:400;'
+                                    f'line-height:1.3;">{_ns_sub}</div>')
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
-                       f'{p["Player"]}{suffix}</div>{rs_html}')
+                       f'{p["Player"]}{suffix}</div>{ns_html_c}{rs_html}')
             if not ps:
                 rows=f'<div style="color:#4b5563;font-size:{ssz};">&#8212;</div>'
             return (f'<div style="position:absolute;left:{lx}px;top:{ly}px;'
@@ -746,9 +758,9 @@ def render_pitch(
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
                 f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&ensp;'
                 f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
-                f'<span style="color:#22c55e;font-weight:700;">On Loan (L)</span>&ensp;'
-                f'<span style="color:#eab308;font-weight:700;">Loaned Out (LO)</span>&ensp;'
-                f'<span style="color:#9ca3af;font-weight:700;">Youth (Y)</span>&ensp;'
+                f'<span style="color:#22c55e;font-weight:700;">On Loan</span>&ensp;'
+                f'<span style="color:#eab308;font-weight:700;">Loaned Out</span>&ensp;'
+                f'<span style="color:#9ca3af;font-weight:700;">Youth</span>&ensp;'
                 f'<span style="color:#6b7280;">{league} · {formation}</span>'
                 f'</span></div>')
 
@@ -1017,6 +1029,11 @@ with st.sidebar:
         nl_=st.checkbox("On Loan? (incoming, green)",key="nl_")
         nlo_=st.checkbox("Loaned Out? (yellow)",key="nlo_")
         nyt_=st.checkbox("Youth Player? (grey)",key="nyt_")
+        nns_=st.checkbox("New Signing? (orange label)",key="nns_")
+        nns_lbl_=st.text_input("New Signing label","NEW SIGNING",key="nns_lbl_",
+                               help="e.g. NEW SIGNING or TARGET")
+        nns_sub_=st.text_input("New Signing subtitle (optional)",key="nns_sub_",
+                               help="e.g. Wide Creator U23")
         sl_opts={f"{s['label']} ({s['id']})":s["id"] for s in FORMATIONS.get(formation,[])}
         ns_=st.selectbox("Add to slot",list(sl_opts.keys()),key="ns_")
         if st.button("\u2795 Add Player") and nn.strip():
@@ -1027,6 +1044,9 @@ with st.sidebar:
                    "Contract expires":ne_,"On Loan":"yes" if nl_ else "no",
                    "Loaned Out":"yes" if nlo_ else "no",
                    "Youth Player":"yes" if nyt_ else "no",
+                   "New Signing":"yes" if nns_ else "no",
+                   "New Signing Label":nns_lbl_.strip(),
+                   "New Signing Sub":nns_sub_.strip(),
                    "League":lg,"Team":sel_team}
             st.session_state.slot_map.setdefault(sl_opts[ns_],[]).append(new_p)
             st.rerun()
@@ -1207,6 +1227,41 @@ if all_on:
                         unsafe_allow_html=True)
     else:
         st.markdown("<div style='font-size:9px;color:#374151;'>No slots with multiple players to reorder</div>",unsafe_allow_html=True)
+
+    # ── New Signing label editor ───────────────────────────────────────────────
+    st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:6px;'>NEW SIGNING / TARGET LABEL</div>",
+                unsafe_allow_html=True)
+    ns_c1,ns_c2=st.columns([2,2])
+    with ns_c1:
+        ns_opts={f"{e['player']['Player']} ({e['lbl']})":e for e in all_on}
+        ns_p_sel=st.selectbox("Player",list(ns_opts.keys()),key="ns_p_sel",label_visibility="visible")
+        ns_e=ns_opts[ns_p_sel]
+        ns_cur=ns_e["player"].get("New Signing","")
+        ns_on=str(ns_cur).strip().lower() in ("yes","y","true","1")
+    with ns_c2:
+        ns_lbl_val=st.text_input("Label (caps)",ns_e["player"].get("New Signing Label","NEW SIGNING"),
+                                  key="ns_lbl_val",label_visibility="visible",
+                                  help="e.g. NEW SIGNING, TARGET, TRIALIST")
+        ns_sub_val=st.text_input("Subtitle (optional)",ns_e["player"].get("New Signing Sub",""),
+                                  key="ns_sub_val",label_visibility="visible",
+                                  help="e.g. Wide Creator U23")
+    ns_btn_lbl=("✅ Showing label — click to remove" if ns_on else "🟠 Add new signing label")
+    if st.button(ns_btn_lbl,key="ns_toggle_btn"):
+        pk=ns_e["player"]["_key"]; sid=ns_e["sid"]
+        def _patch_ns(p):
+            if p["_key"]==pk:
+                if ns_on:
+                    p["New Signing"]="no"; p["New Signing Label"]=""; p["New Signing Sub"]=""
+                else:
+                    p["New Signing"]="yes"
+                    p["New Signing Label"]=ns_lbl_val.strip() or "NEW SIGNING"
+                    p["New Signing Sub"]=ns_sub_val.strip()
+        if sid=="_depth":
+            for p in st.session_state.depth: _patch_ns(p)
+        else:
+            for p in st.session_state.slot_map.get(sid,[]): _patch_ns(p)
+        st.rerun()
+
 
 # ── Full squad ─────────────────────────────────────────────────────────────────
 if st.session_state.df is not None and team_name:
