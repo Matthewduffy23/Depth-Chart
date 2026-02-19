@@ -219,7 +219,7 @@ FORMATIONS:dict[str,list[dict]]={
     ],
 }
 
-PITCH_ORDER=["GK","LCB","CB","RCB","LB","RB","LWB","RWB","DM","CM","AM","LW","RW","ST"]
+PITCH_ORDER=["GK","LCB","CB","RCB","LB","RB","LWB","RWB","CM","DM","AM","LW","RW","ST"]
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def contract_years(s)->int:
@@ -667,7 +667,7 @@ def render_pitch(
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     # Landscape pitch: GK left → ST right, full-width, smart node anchoring.
     if canva:
-        bsz="22px"; nsz="20px"; ssz="13px"; rsz="12px"
+        bsz="26px"; nsz="24px"; ssz="17px"; rsz="16px"
 
         def make_canva_node_ls(slot)->str:
             lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
@@ -707,7 +707,7 @@ def render_pitch(
         # Legend bar — sits above the pitch (top strip)
         header=(f'<div style="position:absolute;top:16px;left:{CPX}px;right:{CANVA_W-CPX-CPW}px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
-                f'font-size:13px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
+                f'font-size:17px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
                 f'<span>Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions</span>'
                 f'<span>'
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
