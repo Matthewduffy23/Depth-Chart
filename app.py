@@ -181,7 +181,7 @@ FORMATIONS:dict[str,list[dict]]={
     "3-4-1-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":8,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":8,  "accepts":["ST"],             "side":"R"},
-        {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N"},
+        {"id":"AM",  "label":"AM",  "x":50,"y":20, "accepts":["AM","LW","RW"],   "side":"N","priority_toks":["AMF"]},
         {"id":"LWB", "label":"LWB", "x":9, "y":35, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
         {"id":"CM1", "label":"CM",  "x":34,"y":39, "accepts":["CM"],             "side":"L"},
         {"id":"CM2", "label":"CM",  "x":66,"y":39, "accepts":["CM"],             "side":"R"},
@@ -195,10 +195,10 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW","AM"],        "side":"L"},
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
         {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW","AM"],        "side":"R"},
-        {"id":"LWB", "label":"LWB", "x":9, "y":32, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
+        {"id":"LWB", "label":"LWB", "x":9, "y":40, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
         {"id":"CM",  "label":"CM",  "x":38,"y":38, "accepts":["CM"],             "side":"L"},
         {"id":"DM",  "label":"DM",  "x":62,"y":38, "accepts":["DM"],             "side":"R"},
-        {"id":"RWB", "label":"RWB", "x":91,"y":32, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
+        {"id":"RWB", "label":"RWB", "x":91,"y":40, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
         {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
         {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
         {"id":"RCB", "label":"RCB", "x":75,"y":62, "accepts":["RCB","CB"],       "side":"R"},
@@ -323,6 +323,11 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
             matched=[p for p in players if p["_key"] not in assigned
                      and any(secondary_fits(p,s) for s in slot_list)]
         matched.sort(key=lambda p:-float(p.get("Minutes played") or 0))
+        # Re-sort: if any slot in slot_list has priority_toks, boost those players to front
+        pt=set()
+        for sl in slot_list: pt.update(sl.get("priority_toks",[]))
+        if pt:
+            matched.sort(key=lambda p:(0 if _tok(p.get("Position","")) in pt else 1,-float(p.get("Minutes played") or 0)))
         for p in matched: assigned.add(p["_key"])
         n=len(slot_list)
         if n==1:
@@ -667,7 +672,7 @@ def render_pitch(
     # ── CANVA mode (1920×1080 landscape) ──────────────────────────────────────
     # Landscape pitch: GK left → ST right, full-width, smart node anchoring.
     if canva:
-        bsz="26px"; nsz="24px"; ssz="17px"; rsz="16px"
+        bsz="28px"; nsz="26px"; ssz="19px"; rsz="18px"
 
         def make_canva_node_ls(slot)->str:
             lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
@@ -707,7 +712,7 @@ def render_pitch(
         # Legend bar — sits above the pitch (top strip)
         header=(f'<div style="position:absolute;top:16px;left:{CPX}px;right:{CANVA_W-CPX-CPW}px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
-                f'font-size:17px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
+                f'font-size:19px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
                 f'<span>Name + contract years{legend_text()} &nbsp;·&nbsp; 🔁=4+ positions</span>'
                 f'<span>'
                 f'<span style="color:#ffffff;font-weight:700;">Under Contract</span>&ensp;'
@@ -1063,7 +1068,7 @@ with dl2:
         f"{team_name.replace(' ','_')}_OPEN_TO_SAVE_PNG.html","text/html",
         help="Download \u2192 open in Chrome/Edge \u2192 PNG auto-saves")
 
-# ── Move / Remove / Edit Contract ─────────────────────────────────────────────
+# ── Move / Remove / Edit Contract / Reorder ───────────────────────────────────
 st.markdown("---")
 all_on=[]
 for sl in slots:
@@ -1120,6 +1125,54 @@ if all_on:
                 st.session_state.hide_pos_override=hpo; st.rerun()
         else:
             st.markdown("<div style='font-size:9px;color:#374151;'>No out-of-position players</div>",unsafe_allow_html=True)
+
+    # ── Reorder players within a slot ─────────────────────────────────────────
+    st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:6px;'>REORDER PLAYERS IN SLOT</div>",
+                unsafe_allow_html=True)
+    # Build slot options that have more than 1 player (only those are reorderable)
+    reorder_slots={}
+    for sl in slots:
+        ps=slot_map.get(sl["id"],[])
+        if len(ps)>1:
+            reorder_slots[f"{sl['label']} ({sl['id']}) — {len(ps)} players"]=sl["id"]
+    # Also depth if >1
+    if len(depth)>1:
+        reorder_slots[f"DEPTH — {len(depth)} players"]="_depth"
+
+    if reorder_slots:
+        ro_c1,ro_c2=st.columns([2,2])
+        with ro_c1:
+            ro_slot_lbl=st.selectbox("Slot",list(reorder_slots.keys()),key="ro_slot",label_visibility="visible")
+            ro_sid=reorder_slots[ro_slot_lbl]
+            # Get current list for that slot
+            if ro_sid=="_depth":
+                cur_list=st.session_state.depth
+            else:
+                cur_list=st.session_state.slot_map.get(ro_sid,[])
+            ro_player_opts=[f"#{i+1} {p['Player']}" for i,p in enumerate(cur_list)]
+            ro_player_sel=st.selectbox("Player to move",ro_player_opts,key="ro_player",label_visibility="visible")
+            ro_idx=ro_player_opts.index(ro_player_sel)
+        with ro_c2:
+            st.markdown("<div style='margin-top:24px;'></div>",unsafe_allow_html=True)
+            rc1,rc2=st.columns(2)
+            with rc1:
+                if st.button("⬆ Move Up",key="ro_up") and ro_idx>0:
+                    lst=list(cur_list)
+                    lst[ro_idx-1],lst[ro_idx]=lst[ro_idx],lst[ro_idx-1]
+                    if ro_sid=="_depth": st.session_state.depth=lst
+                    else: st.session_state.slot_map[ro_sid]=lst
+                    st.rerun()
+            with rc2:
+                if st.button("⬇ Move Down",key="ro_dn") and ro_idx<len(cur_list)-1:
+                    lst=list(cur_list)
+                    lst[ro_idx],lst[ro_idx+1]=lst[ro_idx+1],lst[ro_idx]
+                    if ro_sid=="_depth": st.session_state.depth=lst
+                    else: st.session_state.slot_map[ro_sid]=lst
+                    st.rerun()
+            st.markdown(f"<div style='font-size:9px;color:#4b5563;margin-top:6px;'>Position {ro_idx+1} of {len(cur_list)}<br>1st player = starter shown bold</div>",
+                        unsafe_allow_html=True)
+    else:
+        st.markdown("<div style='font-size:9px;color:#374151;'>No slots with multiple players to reorder</div>",unsafe_allow_html=True)
 
 # ── Full squad ─────────────────────────────────────────────────────────────────
 if st.session_state.df is not None and team_name:
