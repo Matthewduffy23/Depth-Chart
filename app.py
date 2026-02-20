@@ -753,8 +753,7 @@ def render_pitch(
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p); fw="800" if i==0 else "500"
             _lo=is_loaned_out(p); _yt=is_youth(p)
-            col=(player_css_color(yrs,loan,_lo,_yt) if (loan or _lo or _yt or yrs<=1)
-                 else ("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt)))
+            col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt))
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             _hpo=st.session_state.get('hide_pos_override',set())
             oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
@@ -841,8 +840,7 @@ def render_pitch(
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
                 loan=is_loan(p); fw="700" if i==0 else "400"
                 _lo=is_loaned_out(p); _yt=is_youth(p)
-                col=(player_css_color(yrs,loan,_lo,_yt) if (loan or _lo or _yt or yrs<=1)
-                     else ("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt)))
+                col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt))
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 _hpo=st.session_state.get("hide_pos_override",set())
                 oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
@@ -913,8 +911,7 @@ def render_pitch(
             yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p)
             _lo=is_loaned_out(p); _yt=is_youth(p)
-            col=(player_css_color(yrs,loan,_lo,_yt) if (loan or _lo or _yt or yrs<=1)
-                 else ("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt)))
+            col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt))
             multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
             pos_t=_tok(p.get("Position",""))
             br=best_role_html(p,df_sc,"8px") if show_roles else ""
