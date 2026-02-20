@@ -230,6 +230,59 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
         {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
     ],
+    "4-3-3 (CM)":[
+        {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
+        {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
+        {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
+        {"id":"CM1", "label":"CM",  "x":22,"y":36, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM"],             "side":"N"},
+        {"id":"CM2", "label":"CM",  "x":78,"y":36, "accepts":["CM"],             "side":"R"},
+        {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
+        {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
+        {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
+    ],
+    "4-3-1-2":[
+        {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
+        {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
+        {"id":"AM",  "label":"AM",  "x":50,"y":23, "accepts":["AM"],             "side":"N","priority_toks":["AMF"],"native_toks":["AMF"]},
+        {"id":"CM1", "label":"CM",  "x":22,"y":37, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM"],             "side":"N"},
+        {"id":"CM2", "label":"CM",  "x":78,"y":37, "accepts":["CM"],             "side":"R"},
+        {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
+        {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
+        {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
+    ],
+    "3-4-2-1":[
+        {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
+        {"id":"LAM", "label":"AM",  "x":22,"y":19, "accepts":["LW","AM"],        "side":"L","native_toks":["LW","LWF","LAMF","AMF"]},
+        {"id":"RAM", "label":"AM",  "x":78,"y":19, "accepts":["RW","AM"],        "side":"R","native_toks":["RW","RWF","RAMF","AMF"]},
+        {"id":"LWB", "label":"LWB", "x":13,"y":40, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
+        {"id":"CM",  "label":"CM",  "x":38,"y":38, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":62,"y":38, "accepts":["DM"],             "side":"R"},
+        {"id":"RWB", "label":"RWB", "x":87,"y":40, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
+        {"id":"LCB", "label":"LCB", "x":25,"y":62, "accepts":["LCB","CB"],       "side":"L"},
+        {"id":"CB",  "label":"CB",  "x":50,"y":66, "accepts":["CB","LCB","RCB"], "side":"N"},
+        {"id":"RCB", "label":"RCB", "x":75,"y":62, "accepts":["RCB","CB"],       "side":"R"},
+        {"id":"GK",  "label":"GK",  "x":50,"y":83, "accepts":["GK"],             "side":"N"},
+    ],
+    "5-3-2":[
+        {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
+        {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
+        {"id":"LWB", "label":"LWB", "x":13,"y":48, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
+        {"id":"CM1", "label":"CM",  "x":30,"y":36, "accepts":["CM"],             "side":"L"},
+        {"id":"DM",  "label":"DM",  "x":50,"y":43, "accepts":["DM"],             "side":"N"},
+        {"id":"CM2", "label":"CM",  "x":70,"y":36, "accepts":["CM"],             "side":"R"},
+        {"id":"RWB", "label":"RWB", "x":87,"y":48, "accepts":["RWB","RB"],       "side":"R","wb_only":True},
+        {"id":"LCB", "label":"LCB", "x":17,"y":64, "accepts":["LCB","CB"],       "side":"L"},
+        {"id":"CB1", "label":"CB",  "x":37,"y":68, "accepts":["CB","LCB","RCB"], "side":"L"},
+        {"id":"CB2", "label":"CB",  "x":63,"y":68, "accepts":["CB","LCB","RCB"], "side":"R"},
+        {"id":"RCB", "label":"RCB", "x":83,"y":64, "accepts":["RCB","CB"],       "side":"R"},
+        {"id":"GK",  "label":"GK",  "x":50,"y":83, "accepts":["GK"],             "side":"N"},
+    ],
 }
 
 PITCH_ORDER=["GK","LCB","CB","RCB","LB","RB","LWB","RWB","CM","DM","AM","LW","RW","ST"]
@@ -381,7 +434,9 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
             slot_map[slot_list[0]["id"]]=matched
         else:
             ordered=sorted(slot_list,key=lambda s:{"L":0,"N":1,"R":2}[s["side"]])
+            for sl in slot_list: slot_map[sl["id"]]=[]
             starters=[]; used=set()
+            # Pick best-fit starter for each slot
             for sl in ordered:
                 best=None; best_sc=99
                 for p in matched:
@@ -389,14 +444,15 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
                     sc=side_score(p,sl["side"])
                     if sc<best_sc: best_sc=sc; best=p
                 if best: starters.append((sl["id"],best)); used.add(id(best))
-            depth_rem=[p for p in matched if id(p) not in used]
-            for sl in slot_list: slot_map[sl["id"]]=[]
             for sid,p in starters: slot_map[sid].append(p)
-            slot_map[slot_list[0]["id"]].extend(depth_rem)
+            # Distribute remaining players round-robin across slots by minutes order
+            depth_rem=[p for p in matched if id(p) not in used]
+            for i,p in enumerate(depth_rem):
+                slot_map[ordered[i % n]["id"]].append(p)
 
 
     # ── Fix 4: 4-back CB redistribution by position token ────────────────────
-    FOUR_BACK_FORMATIONS={"4-2-3-1","4-2-3-1 (CM)","4-3-3","4-4-2","4-1-4-1","3-4-3"}
+    FOUR_BACK_FORMATIONS={"4-2-3-1","4-2-3-1 (CM)","4-3-3","4-3-3 (CM)","4-3-1-2","4-4-2","4-1-4-1","3-4-3"}
     if formation_key in FOUR_BACK_FORMATIONS:
         cb1_id=next((s["id"] for s in slots if s["id"]=="CB1"),None)
         cb2_id=next((s["id"] for s in slots if s["id"]=="CB2"),None)
@@ -426,7 +482,7 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
     # For 3-back formations, re-distribute CB/LCB/RCB players correctly:
     # Pure CB → middle; LCB → left; RCB → right.
     # If no pure CB, alternate by minutes: 1st→CB, 2nd→RCB, 3rd→CB, 4th→RCB...
-    THREE_BACK_FORMATIONS={"3-5-2","3-4-1-2","3-4-3"}
+    THREE_BACK_FORMATIONS={"3-5-2","3-4-1-2","3-4-3","3-4-2-1"}
     if formation_key in THREE_BACK_FORMATIONS:
         lcb_id=next((s["id"] for s in slots if s["id"]=="LCB"),None)
         cb_id =next((s["id"] for s in slots if s["id"]=="CB"), None)
@@ -465,6 +521,28 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
             slot_map[lcb_id]=lcb_starters if lcb_starters else other
             slot_map[cb_id] =cb_starters
             slot_map[rcb_id]=rcb_starters
+    # ── 5-3-2 CB redistribution (4 CB slots) ────────────────────────────────
+    if formation_key == "5-3-2":
+        lcb_id=next((s["id"] for s in slots if s["id"]=="LCB"),None)
+        cb1_id=next((s["id"] for s in slots if s["id"]=="CB1"),None)
+        cb2_id=next((s["id"] for s in slots if s["id"]=="CB2"),None)
+        rcb_id=next((s["id"] for s in slots if s["id"]=="RCB"),None)
+        ids_532=[i for i in [lcb_id,cb1_id,cb2_id,rcb_id] if i]
+        if len(ids_532)==4:
+            all_cbs5=[]
+            for sid in ids_532: all_cbs5.extend(slot_map.get(sid,[]))
+            all_cbs5.sort(key=lambda p:-float(p.get("Minutes played") or 0))
+            pure_lcb=[p for p in all_cbs5 if _tok(p.get("Position",""))=="LCB"]
+            pure_rcb=[p for p in all_cbs5 if _tok(p.get("Position",""))=="RCB"]
+            pure_cb =[p for p in all_cbs5 if _tok(p.get("Position",""))=="CB"]
+            oth5    =[p for p in all_cbs5 if _tok(p.get("Position","")) not in {"CB","LCB","RCB"}]
+            slot_map[lcb_id]=pure_lcb or []
+            slot_map[rcb_id]=pure_rcb or []
+            # Distribute pure CB evenly between inner slots L/R, alternating by mins
+            inner=[]; [inner.append(p) for p in pure_cb+oth5]
+            slot_map[cb1_id]=[p for i,p in enumerate(inner) if i%2==0]
+            slot_map[cb2_id]=[p for i,p in enumerate(inner) if i%2==1]
+    # ── End 5-3-2 CB ─────────────────────────────────────────────────────────
     # ── End Fix 6 ────────────────────────────────────────────────────────────
 
     for sid,ps in slot_map.items():
