@@ -318,13 +318,28 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
     assigned:set=set()
     slot_map:dict[str,list]={s["id"]:[] for s in slots}
 
-    def primary_fits(p,slot):
+    # All canonical slot labels present in this formation
+    formation_labels:set=set(by_label.keys())
+
+    def first_tok_fits(p,slot):
+        """True only if the player's FIRST position token canonically matches this slot."""
         tok=_tok(p.get("Position",""))
         if slot.get("wb_only"):
-            return tok in {"LB","LWB","RB","RWB"} and _canon(p.get("Position","")) in slot["accepts"]
-        return _canon(p.get("Position","")) in slot["accepts"]
+            return tok in {"LB","LWB","RB","RWB"} and CANONICAL.get(tok,"CM") in slot["accepts"]
+        return CANONICAL.get(tok,"CM") in slot["accepts"]
+
+    def primary_fits(p,slot):
+        """Used for OOP flagging only — same as first_tok_fits."""
+        return first_tok_fits(p,slot)
+
+    def has_any_primary_slot(p):
+        """True if player's first token has a matching slot label in this formation."""
+        tok=_tok(p.get("Position",""))
+        canon=CANONICAL.get(tok,"CM")
+        return canon in formation_labels
 
     def secondary_fits(p,slot):
+        """Only secondary tokens — and only used for players with no primary slot."""
         if slot.get("wb_only"): return False
         for t in _all_toks(p.get("Position",""))[1:]:
             if CANONICAL.get(t,"CM") in slot["accepts"]: return True
@@ -338,17 +353,28 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
     for label in PITCH_ORDER:
         if label not in by_label: continue
         slot_list=by_label[label]
+
+        # Pass 1: players whose FIRST token fits this slot
         matched=[p for p in players if p["_key"] not in assigned
-                 and any(primary_fits(p,s) for s in slot_list)]
+                 and any(first_tok_fits(p,s) for s in slot_list)]
+
+        # Pass 2: only if no primary matches — take players who have no primary slot
+        # anywhere in the formation AND whose secondary tokens fit here
         if not matched:
             matched=[p for p in players if p["_key"] not in assigned
+                     and not has_any_primary_slot(p)
                      and any(secondary_fits(p,s) for s in slot_list)]
+
         matched.sort(key=lambda p:-float(p.get("Minutes played") or 0))
-        # Re-sort: if any slot in slot_list has priority_toks, boost those players to front
+
+        # priority_toks: within first-token matches only, boost specific tokens to front
+        # (e.g. AMF before LAMF/RAMF for AM slot) — never pulls in outsiders
         pt=set()
         for sl in slot_list: pt.update(sl.get("priority_toks",[]))
         if pt:
-            matched.sort(key=lambda p:(0 if _tok(p.get("Position","")) in pt else 1,-float(p.get("Minutes played") or 0)))
+            matched.sort(key=lambda p:(0 if _tok(p.get("Position","")) in pt else 1,
+                                       -float(p.get("Minutes played") or 0)))
+
         for p in matched: assigned.add(p["_key"])
         n=len(slot_list)
         if n==1:
