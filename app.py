@@ -945,24 +945,70 @@ with st.sidebar:
     st.markdown("## \u26bd Squad Chart")
     st.markdown("---")
     st.markdown("**DATA**")
-    uploaded=st.file_uploader("Upload CSV",type=["csv"])
+
+    # ── Preloaded datasets ─────────────────────────────────────────────────────
+    import os
+    PRELOADED = {
+        "— Select a dataset —": None,
+        "EFL & Scotland (Feb 26)": "EFLSCOTFEB26.csv",
+        "World (Jan 26)":          "WorldaJan26.csv",
+    }
+    preset_choice = st.selectbox("Preloaded dataset", list(PRELOADED.keys()), key="preset_choice")
+    st.markdown("<div style='text-align:center;font-size:9px;color:#4b5563;margin:4px 0;'>— or —</div>",
+                unsafe_allow_html=True)
+    uploaded = st.file_uploader("Upload CSV", type=["csv"])
+
+    @st.cache_data(show_spinner=False)
+    def _load_path(path: str) -> pd.DataFrame:
+        df = pd.read_csv(path); df.columns = df.columns.str.strip()
+        for c in ["Player","Team","Position","League"]:
+            if c in df.columns: df[c] = df[c].astype(str).str.strip()
+        for c in ["Minutes played","Goals","Assists","Age","xG","xA"]:
+            if c in df.columns: df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
+        df["_ftok"] = df["Position"].apply(_tok); df["_key"] = df["Player"]
+        return df
+
+    @st.cache_data(show_spinner=False)
+    def _load(f) -> pd.DataFrame:
+        df = pd.read_csv(f); df.columns = df.columns.str.strip()
+        for c in ["Player","Team","Position","League"]:
+            if c in df.columns: df[c] = df[c].astype(str).str.strip()
+        for c in ["Minutes played","Goals","Assists","Age","xG","xA"]:
+            if c in df.columns: df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
+        df["_ftok"] = df["Position"].apply(_tok); df["_key"] = df["Player"]
+        return df
+
+    # Determine which source to load — upload takes priority over preset
+    _active_source = None
     if uploaded:
-        @st.cache_data
-        def _load(f)->pd.DataFrame:
-            df=pd.read_csv(f); df.columns=df.columns.str.strip()
-            for c in ["Player","Team","Position","League"]:
-                if c in df.columns: df[c]=df[c].astype(str).str.strip()
-            for c in ["Minutes played","Goals","Assists","Age","xG","xA"]:
-                if c in df.columns: df[c]=pd.to_numeric(df[c],errors="coerce").fillna(0)
-            df["_ftok"]=df["Position"].apply(_tok); df["_key"]=df["Player"]
-            return df
-        raw=_load(uploaded)
-        if st.session_state.df is None or len(raw)!=len(st.session_state.df):
-            st.session_state.df=raw; st.session_state.df_sc=None
+        _active_source = ("upload", uploaded)
+    elif preset_choice and PRELOADED.get(preset_choice):
+        _csv_path = PRELOADED[preset_choice]
+        if os.path.exists(_csv_path):
+            _active_source = ("preset", _csv_path)
+        else:
+            st.warning(f"⚠ {_csv_path} not found — place it alongside app.py")
+
+    # Track which source is loaded so we reset scores when it changes
+    _src_key = (uploaded.name if uploaded else None) or preset_choice
+    if _active_source:
+        if st.session_state.get("_src_key") != _src_key:
+            st.session_state.df = None
+            st.session_state.df_sc = None
+            st.session_state["_src_key"] = _src_key
+        if st.session_state.df is None:
+            with st.spinner("Loading…"):
+                if _active_source[0] == "upload":
+                    raw = _load(_active_source[1])
+                else:
+                    raw = _load_path(_active_source[1])
+            st.session_state.df = raw
+            st.session_state.df_sc = None
         if st.session_state.df_sc is None:
             with st.spinner("Computing role scores\u2026"):
-                st.session_state.df_sc=compute_role_scores(st.session_state.df)
-        st.success(f"\u2713 {len(st.session_state.df):,} players \u00b7 role scores ready")
+                st.session_state.df_sc = compute_role_scores(st.session_state.df)
+        _lbl = uploaded.name if uploaded else preset_choice
+        st.success(f"\u2713 {len(st.session_state.df):,} players \u00b7 {_lbl}")
 
     st.markdown("---")
     if st.session_state.df is not None:
