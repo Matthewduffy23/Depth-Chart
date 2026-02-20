@@ -128,9 +128,9 @@ def _multi_role(pos:str)->bool: return len(_all_toks(pos))>=4
 FORMATIONS:dict[str,list[dict]]={
     "4-2-3-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
-        {"id":"LW",  "label":"LW",  "x":13,"y":25, "accepts":["LW","AM"],        "side":"L"},
-        {"id":"AM",  "label":"AM",  "x":50,"y":27, "accepts":["AM"],             "side":"N"},
-        {"id":"RW",  "label":"RW",  "x":87,"y":25, "accepts":["RW","AM"],        "side":"R"},
+        {"id":"LW",  "label":"LW",  "x":13,"y":25, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
+        {"id":"AM",  "label":"AM",  "x":50,"y":27, "accepts":["AM"],             "side":"N","priority_toks":["AMF"],"native_toks":["AMF"]},
+        {"id":"RW",  "label":"RW",  "x":87,"y":25, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
         {"id":"DM",  "label":"DM",  "x":35,"y":46, "accepts":["DM"],             "side":"L"},
         {"id":"CM",  "label":"CM",  "x":65,"y":46, "accepts":["CM"],             "side":"R"},
         {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
@@ -141,8 +141,8 @@ FORMATIONS:dict[str,list[dict]]={
     ],
     "4-3-3":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
-        {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW"],             "side":"L"},
-        {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW"],             "side":"R"},
+        {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
+        {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
         {"id":"CM",  "label":"CM",  "x":22,"y":36, "accepts":["CM"],             "side":"L"},
         {"id":"DM",  "label":"DM",  "x":50,"y":44, "accepts":["DM"],             "side":"N"},
         {"id":"AM",  "label":"AM",  "x":78,"y":36, "accepts":["AM"],             "side":"R"},
@@ -155,10 +155,10 @@ FORMATIONS:dict[str,list[dict]]={
     "4-4-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":9,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":9,  "accepts":["ST"],             "side":"R"},
-        {"id":"LW",  "label":"LW",  "x":9, "y":34, "accepts":["LW","AM"],        "side":"L","native_toks":["LAMF","LWF","LW"]},
+        {"id":"LW",  "label":"LW",  "x":9, "y":34, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
         {"id":"CM1", "label":"CM",  "x":34,"y":38, "accepts":["CM"],             "side":"L"},
         {"id":"CM2", "label":"CM",  "x":66,"y":38, "accepts":["CM"],             "side":"R"},
-        {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW","AM"],        "side":"R","native_toks":["RAMF","RWF","RW"]},
+        {"id":"RW",  "label":"RW",  "x":91,"y":34, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
         {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
@@ -192,9 +192,9 @@ FORMATIONS:dict[str,list[dict]]={
         {"id":"GK",  "label":"GK",  "x":50,"y":82, "accepts":["GK"],             "side":"N"},
     ],
     "3-4-3":[
-        {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW","AM"],        "side":"L"},
+        {"id":"LW",  "label":"LW",  "x":14,"y":16, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
-        {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW","AM"],        "side":"R"},
+        {"id":"RW",  "label":"RW",  "x":86,"y":16, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
         {"id":"LWB", "label":"LWB", "x":13,"y":40, "accepts":["LWB","LB"],       "side":"L","wb_only":True},
         {"id":"CM",  "label":"CM",  "x":38,"y":38, "accepts":["CM"],             "side":"L"},
         {"id":"DM",  "label":"DM",  "x":62,"y":38, "accepts":["DM"],             "side":"R"},
@@ -206,11 +206,24 @@ FORMATIONS:dict[str,list[dict]]={
     ],
     "4-1-4-1":[
         {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
-        {"id":"LW",  "label":"LW",  "x":9, "y":26, "accepts":["LW"],             "side":"L"},
-        {"id":"AM",  "label":"AM",  "x":30,"y":33, "accepts":["AM"],             "side":"L"},
+        {"id":"LW",  "label":"LW",  "x":9, "y":26, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
+        {"id":"AM",  "label":"AM",  "x":30,"y":33, "accepts":["AM"],             "side":"L","priority_toks":["AMF"],"native_toks":["AMF"]},
         {"id":"DM",  "label":"DM",  "x":50,"y":36, "accepts":["DM"],             "side":"N"},
         {"id":"CM",  "label":"CM",  "x":70,"y":33, "accepts":["CM"],             "side":"R"},
-        {"id":"RW",  "label":"RW",  "x":91,"y":26, "accepts":["RW"],             "side":"R"},
+        {"id":"RW",  "label":"RW",  "x":91,"y":26, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
+        {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
+        {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
+        {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
+        {"id":"RB",  "label":"RB",  "x":88,"y":61, "accepts":["RB","RWB"],       "side":"R","wb_only":True},
+        {"id":"GK",  "label":"GK",  "x":50,"y":84, "accepts":["GK"],             "side":"N"},
+    ],
+    "4-2-3-1 (CM)":[
+        {"id":"ST",  "label":"ST",  "x":50,"y":9,  "accepts":["ST"],             "side":"N"},
+        {"id":"LW",  "label":"LW",  "x":13,"y":25, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
+        {"id":"AM",  "label":"AM",  "x":50,"y":27, "accepts":["AM"],             "side":"N","priority_toks":["AMF"],"native_toks":["AMF"]},
+        {"id":"RW",  "label":"RW",  "x":87,"y":25, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
+        {"id":"LCM", "label":"CM",  "x":35,"y":46, "accepts":["CM"],             "side":"L"},
+        {"id":"RCM", "label":"CM",  "x":65,"y":46, "accepts":["CM"],             "side":"R"},
         {"id":"LB",  "label":"LB",  "x":12,"y":61, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":67, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":67, "accepts":["CB","LCB","RCB"], "side":"R"},
@@ -357,7 +370,7 @@ def assign_players(players:list,formation_key:str)->tuple[dict,list]:
 
 
     # ── Fix 4: 4-back CB redistribution by position token ────────────────────
-    FOUR_BACK_FORMATIONS={"4-2-3-1","4-3-3","4-4-2","4-1-4-1","3-4-3"}
+    FOUR_BACK_FORMATIONS={"4-2-3-1","4-2-3-1 (CM)","4-3-3","4-4-2","4-1-4-1","3-4-3"}
     if formation_key in FOUR_BACK_FORMATIONS:
         cb1_id=next((s["id"] for s in slots if s["id"]=="CB1"),None)
         cb2_id=next((s["id"] for s in slots if s["id"]=="CB2"),None)
