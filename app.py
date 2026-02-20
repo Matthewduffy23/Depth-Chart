@@ -951,7 +951,7 @@ with st.sidebar:
     PRELOADED = {
         "— Select a dataset —": None,
         "EFL & Scotland (Feb 26)": "EFLSCOTFEB26.csv",
-        "World (Jan 26)":          "WorldaJan26.csv",
+        "World (Jan 26)":          "WORLDaJan26.csv",
     }
     preset_choice = st.selectbox("Preloaded dataset", list(PRELOADED.keys()), key="preset_choice")
     st.markdown("<div style='text-align:center;font-size:9px;color:#4b5563;margin:4px 0;'>— or —</div>",
