@@ -612,12 +612,12 @@ def all_roles_html(player,df_sc,fs="8px",flip=False):
         if flip:
             # Right-anchored node: score on left, label on right so it reads toward the pitch
             lines.append(
-                f'<div style="display:flex;justify-content:flex-end;gap:6px;font-size:{fs};line-height:1.4;">'
+                f'<div style="display:flex;justify-content:flex-end;gap:6px;font-size:{fs};line-height:1.4;white-space:nowrap;">'
                 f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};min-width:22px;text-align:right;">{int(sc)}</span>'
                 f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};">{rn}</span></div>')
         else:
             lines.append(
-                f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;min-width:90px;">'
+                f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;min-width:120px;white-space:nowrap;">'
                 f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};">{rn}</span>'
                 f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};min-width:22px;text-align:right;">{int(sc)}</span></div>')
     return f'<div style="margin-top:2px;">{"".join(lines)}</div>'
@@ -633,7 +633,7 @@ def best_role_html(player,df_sc,fs="8px",flip=False):
         if isinstance(v,(int,float)) and not np.isnan(float(v)): scores[rn]=float(v)
     if not scores: return ""
     best=max(scores,key=scores.get); sc=scores[best]; sc_col=score_to_color(sc)
-    return (f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;margin-top:2px;min-width:90px;">'
+    return (f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;margin-top:2px;min-width:120px;white-space:nowrap;">'
             f'<span style="color:#7a8494;">{best}</span>'
             f'<span style="color:{sc_col};font-weight:700;min-width:22px;text-align:right;">{int(sc)}</span></div>')
 
