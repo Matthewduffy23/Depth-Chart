@@ -958,6 +958,22 @@ def render_pitch(
 
 # ── HTML wrapper for standalone download ─────────────────────────────────────
 FONT_URL="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+def make_mobile_html_page(pitch_html:str, team:str)->str:
+    """Full-size pitch optimised for iPhone Safari — viewport meta, full-width."""
+    BG="#0a0f1c"
+    return f"""<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>{team} Squad Depth</title>
+<style>
+@import url('{FONT_URL}');
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:{BG};font-family:Montserrat,sans-serif;overflow-x:hidden;}}
+#pitch-root{{width:100vw!important;padding:0!important;}}
+#pitch-field{{height:calc(100vw * 1.42)!important;padding-bottom:0!important;}}
+</style></head>
+<body>{pitch_html}</body></html>"""
 
 def make_html_page(pitch_html:str, team:str, canva:bool, pitch_w:int=560)->str:
     """Standalone HTML page that renders identically to Streamlit."""
@@ -1148,6 +1164,7 @@ with st.sidebar:
         st.toggle("White names",     False, key="white_names")
         st.toggle("Show contracts",  True,  key="show_contracts")
         st.toggle("Canva 1920\u00d71080", False, key="canva_mode")
+        st.toggle("Mobile view 📱",  False, key="mobile_mode")
 
         st.markdown("---")
         changed=(sel_team!=st.session_state.last_team or
@@ -1255,9 +1272,9 @@ pitch=render_pitch(
     best_role_only=_tog("best_role_only"),
 )
 
+_mobile = _tog("mobile_mode")
 if canva:
     # Scale 1920×1080 down to fit browser using CSS transform
-    # Container height = 1080 * (availableWidth/1920) to avoid scroll
     st.markdown(
         f'<div id="canva-scaler" style="width:100%;background:#0a0f1c;overflow:hidden;">'
         f'<div style="transform-origin:top left;" id="canva-inner">{pitch}</div></div>'
@@ -1274,6 +1291,20 @@ if canva:
         f'}})()'
         f'</script>',
         unsafe_allow_html=True)
+elif _mobile:
+    # Same pitch HTML — CSS scale(0.5) halves it on screen only.
+    # Container height forced to 50% so no whitespace gap below.
+    st.markdown(
+        f'<div id="mob-wrap" style="width:100%;overflow:hidden;">'
+        f'<div id="mob-inner" style="transform-origin:top left;'
+        f'width:200%;transform:scale(0.5);">{pitch}</div></div>'
+        f'<script>(function(){{'
+        f'  var w=document.getElementById("mob-wrap");'
+        f'  var n=document.getElementById("mob-inner");'
+        f'  function sz(){{w.style.height=(n.scrollHeight*0.5)+"px";}}'
+        f'  setTimeout(sz,200); window.addEventListener("resize",sz);'
+        f'}})()</script>',
+        unsafe_allow_html=True)
 else:
     st.markdown(pitch, unsafe_allow_html=True)
 
@@ -1281,7 +1312,11 @@ else:
 html_dl = make_html_page(pitch, team_name, canva, PORTRAIT_W)
 png_dl  = make_png_page(pitch, team_name, canva, PORTRAIT_W)
 
-dl1,dl2,_=st.columns([1,1,4])
+if _mobile:
+    mob_dl = make_mobile_html_page(pitch, team_name)
+    dl1,dl2,dl3,_=st.columns([1,1,1,1])
+else:
+    dl1,dl2,_=st.columns([1,1,4])
 with dl1:
     st.download_button("\u2b07 HTML", html_dl.encode("utf-8"),
         f"{team_name.replace(' ','_')}_squad_depth.html","text/html")
@@ -1289,6 +1324,11 @@ with dl2:
     st.download_button("\u2b07 PNG",  png_dl.encode("utf-8"),
         f"{team_name.replace(' ','_')}_OPEN_TO_SAVE_PNG.html","text/html",
         help="Download \u2192 open in Chrome/Edge \u2192 PNG auto-saves")
+if _mobile:
+    with dl3:
+        st.download_button("\u2b07 Mobile HTML \U0001f4f1", mob_dl.encode("utf-8"),
+            f"{team_name.replace(' ','_')}_mobile.html","text/html",
+            help="Full-size pitch — open in Safari on iPhone")
 
 # ── Move / Remove / Edit Contract / Reorder ───────────────────────────────────
 st.markdown("---")
