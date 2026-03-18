@@ -306,7 +306,12 @@ def is_loaned_out(p:dict)->bool:
 def is_youth(p:dict)->bool:
     return str(p.get("Youth Player","")).strip().lower() in ("yes","y","true","1")
 
-def player_css_color(yrs:int,loan:bool,loaned_out:bool=False,youth:bool=False)->str:
+def is_esc(p:dict)->bool:
+    pk = p.get("_key","")
+    return pk in st.session_state.get("esc_players", set())
+
+def player_css_color(yrs:int,loan:bool,loaned_out:bool=False,youth:bool=False,esc:bool=False,esc_blue:bool=False)->str:
+    if esc and esc_blue: return "#60a5fa"  # light blue for ESC when toggle on
     if loaned_out: return "#eab308"   # yellow — loaned out
     if youth:      return "#9ca3af"   # light grey — youth player
     if loan:       return "#22c55e"   # green — on loan (incoming)
@@ -610,11 +615,11 @@ def all_roles_html(player,df_sc,fs="8px",flip=False):
         sc_col=score_to_color(sc); is_b=rn==best
         name_col = sc_col if is_b else "#7a8494"
         if flip:
-            # Right-anchored node: score on left, label on right so it reads toward the pitch
+            # Right-anchored node: role name on LEFT, score on RIGHT so it reads toward pitch
             lines.append(
                 f'<div style="display:flex;justify-content:flex-end;gap:6px;font-size:{fs};line-height:1.4;white-space:nowrap;">'
-                f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};width:22px;text-align:right;flex-shrink:0;">{int(sc)}</span>'
-                f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};min-width:110px;">{rn}</span></div>')
+                f'<span style="color:{name_col};font-weight:{"700" if is_b else "400"};min-width:110px;text-align:right;">{rn}</span>'
+                f'<span style="color:{sc_col};font-weight:{"700" if is_b else "400"};width:22px;flex-shrink:0;">{int(sc)}</span></div>')
         else:
             lines.append(
                 f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;min-width:90px;">'
@@ -633,9 +638,15 @@ def best_role_html(player,df_sc,fs="8px",flip=False):
         if isinstance(v,(int,float)) and not np.isnan(float(v)): scores[rn]=float(v)
     if not scores: return ""
     best=max(scores,key=scores.get); sc=scores[best]; sc_col=score_to_color(sc)
-    return (f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;margin-top:2px;min-width:90px;">'
-            f'<span style="color:#7a8494;">{best}</span>'
-            f'<span style="color:{sc_col};font-weight:700;min-width:22px;text-align:right;">{int(sc)}</span></div>')
+    if flip:
+        # Right-anchored: role name on LEFT, score on RIGHT
+        return (f'<div style="display:flex;justify-content:flex-end;gap:6px;font-size:{fs};line-height:1.4;margin-top:2px;min-width:90px;">'
+                f'<span style="color:#7a8494;text-align:right;">{best}</span>'
+                f'<span style="color:{sc_col};font-weight:700;min-width:22px;">{int(sc)}</span></div>')
+    else:
+        return (f'<div style="display:flex;justify-content:space-between;gap:4px;font-size:{fs};line-height:1.4;margin-top:2px;min-width:90px;">'
+                f'<span style="color:#7a8494;">{best}</span>'
+                f'<span style="color:{sc_col};font-weight:700;min-width:22px;text-align:right;">{int(sc)}</span></div>')
 
 # ── SVG pitch lines — dimmed so text always wins ──────────────────────────────
 # Opacity 0.18 so pitch outline is visible as a guide but never overpowers text
@@ -700,21 +711,33 @@ def canva_landscape_svg()->str:
         f'</svg>'
     )
 
-def canva_slot_px(slot_x:float, slot_y:float)->tuple[int,int,str,str]:
+def canva_slot_px(slot_x:float, slot_y:float, slot_id:str="")->tuple[int,int,str,str]:
     """Portrait % → landscape px + smart CSS anchor for nodes.
     Portrait y%: small=attack(ST), large=defence(GK)
     Landscape: GK → left side (small lx), ST → right side (large lx)
     Portrait x%: small=left wing (LW), large=right wing (RW)
     Landscape: LW → top (small ly), RW → bottom (large ly)
     Returns: (lx, ly, css_transform, text_align)
+    
+    Special handling: LWB/RWB in 3-back formations pushed closer to edges
     """
     Y_MIN,Y_MAX=7.0,87.0
     # Very small inner padding so nodes spread to pitch edges
     INNER_PAD_X=20   # inset from pitch border for player text
     INNER_PAD_Y=12
+    
+    # Adjust x position for LWB/RWB in Canva mode only
+    adjusted_x = slot_x
+    if slot_id in ("LWB", "RWB"):
+        # Push wingbacks closer to edges (only in Canva)
+        if slot_x < 20:  # LWB
+            adjusted_x = 8
+        elif slot_x > 80:  # RWB
+            adjusted_x = 92
+    
     lx_pct = 1.0 - (slot_y - Y_MIN) / (Y_MAX - Y_MIN)  # 0=GK-side,1=ST-side
     lx = CPX + INNER_PAD_X + lx_pct * (CPW - 2*INNER_PAD_X)
-    ly_pct = slot_x / 100.0
+    ly_pct = adjusted_x / 100.0
     ly = CPY + INNER_PAD_Y + ly_pct * (CPH - 2*INNER_PAD_Y)
     # Smart anchor: keep nodes inside pitch boundaries
     # Horizontal: GK side → text grows right; ST side → text grows left; else centre
@@ -736,6 +759,7 @@ def render_pitch(
     white_names:bool=False,
     show_contracts:bool=True,
     best_role_only:bool=False,
+    esc_blue:bool=False,
 )->str:
     BG="#0a0f1c"
 
@@ -752,8 +776,8 @@ def render_pitch(
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p); fw="800" if i==0 else "500"
-            _lo=is_loaned_out(p); _yt=is_youth(p)
-            col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt))
+            _lo=is_loaned_out(p); _yt=is_youth(p); _esc=is_esc(p)
+            col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt,_esc,esc_blue))
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             _hpo=st.session_state.get('hide_pos_override',set())
             oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
@@ -826,7 +850,7 @@ def render_pitch(
         bsz="32px"; nsz="29px"; ssz="21px"; rsz="20px"
 
         def make_canva_node_ls(slot)->str:
-            lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]))
+            lx,ly,tx,ta=canva_slot_px(float(slot["x"]),float(slot["y"]),slot["id"])
             ps_all=slot_map.get(slot["id"],[])
             ps=ps_all[:1] if xi_only else ps_all
             badge=(f'<div style="display:inline-block;padding:3px 12px;'
@@ -839,8 +863,8 @@ def render_pitch(
                 yrs=contract_years(p.get("Contract expires",""))
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
                 loan=is_loan(p); fw="700" if i==0 else "400"
-                _lo=is_loaned_out(p); _yt=is_youth(p)
-                col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt))
+                _lo=is_loaned_out(p); _yt=is_youth(p); _esc=is_esc(p)
+                col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt,_esc,esc_blue))
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 _hpo=st.session_state.get("hide_pos_override",set())
                 oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
@@ -852,7 +876,7 @@ def render_pitch(
                 mt="margin-top:5px;" if i>0 else ""
                 rs_html=(best_role_html(p,df_sc,rsz,flip=(ta=="right")) if (show_roles and best_role_only)
                          else all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (i==0 and show_roles)
-                         else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
+                         else best_role_html(p,df_sc,rsz,flip=(ta=="right")) if (i>0 and show_roles) else "")
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
                        f'{p["Player"]}{suffix}</div>{rs_html}')
@@ -875,6 +899,7 @@ def render_pitch(
         nodes="".join(make_canva_node_ls(s) for s in slots)
 
         # Legend bar — sits above the pitch (top strip)
+        esc_legend=f'<span style="color:#60a5fa;font-weight:700;">ESC</span>&ensp;' if esc_blue else ""
         header=(f'<div style="position:absolute;top:16px;left:{CPX}px;right:{CANVA_W-CPX-CPW}px;'
                 f'display:flex;justify-content:space-between;align-items:center;z-index:20;'
                 f'font-size:21px;color:#6b7280;letter-spacing:.03em;width:{CPW}px;">'
@@ -886,6 +911,7 @@ def render_pitch(
                 f'<span style="color:#22c55e;font-weight:700;">On Loan</span>&ensp;'
                 f'<span style="color:#eab308;font-weight:700;">Loaned Out</span>&ensp;'
                 f'<span style="color:#9ca3af;font-weight:700;">Youth</span>&ensp;'
+                f'{esc_legend}'
                 f'<span style="color:#6b7280;">{league} · {formation}</span>'
                 f'</span></div>')
 
@@ -910,8 +936,8 @@ def render_pitch(
         for p in depth:
             yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
             loan=is_loan(p)
-            _lo=is_loaned_out(p); _yt=is_youth(p)
-            col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt))
+            _lo=is_loaned_out(p); _yt=is_youth(p); _esc=is_esc(p)
+            col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt,_esc,esc_blue))
             multi="\U0001f501" if _multi_role(p.get("Position","")) else ""
             pos_t=_tok(p.get("Position",""))
             br=best_role_html(p,df_sc,"8px") if show_roles else ""
@@ -933,6 +959,7 @@ def render_pitch(
     header_html=(f'<div style="display:flex;justify-content:space-between;'
                  f'align-items:baseline;margin-bottom:4px;font-size:9px;color:#6b7280;">'
                  f'<span>{league}</span><span>{formation}</span></div>')
+    esc_legend_p=f'<span style="color:#60a5fa;">ESC</span>' if esc_blue else ""
     legend_bar=(f'<div style="text-align:center;font-size:8px;color:#6b7280;margin-top:6px;">'
                 f'Name + contract years{legend_text()} \u00b7 \U0001f501=4+ positions</div>'
                 f'<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;'
@@ -942,7 +969,7 @@ def render_pitch(
                 f'<span style="color:#ef4444;">Out of Contract</span>'
                 f'<span style="color:#22c55e;">On Loan</span>'
                 f'<span style="color:#eab308;">Loaned Out</span>'
-                f'<span style="color:#9ca3af;">Youth</span></div>')
+                f'<span style="color:#9ca3af;">Youth</span>{esc_legend_p}</div>')
 
     # The pitch uses padding-bottom:142% to maintain aspect ratio.
     # For PNG capture we need an EXPLICIT pixel height.
@@ -1065,7 +1092,7 @@ document.fonts.ready.then(function(){{
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
              "last_team":None,"last_formation":None,"edit_contract_player":None,
-             "hide_pos_override":set(),"new_signing":{}}.items():
+             "hide_pos_override":set(),"new_signing":{},"esc_players":set()}.items():
     if k not in st.session_state: st.session_state[k]=v
 
 def _tog(k,d=False): return st.session_state.get(k,d)
@@ -1163,6 +1190,7 @@ with st.sidebar:
         st.toggle("XI only",         False, key="xi_only")
         st.toggle("White names",     False, key="white_names")
         st.toggle("Show contracts",  True,  key="show_contracts")
+        st.toggle("ESC blue names",  False, key="esc_blue")
         st.toggle("Canva 1920\u00d71080", False, key="canva_mode")
         st.toggle("Mobile view 📱",  False, key="mobile_mode")
 
@@ -1270,6 +1298,7 @@ pitch=render_pitch(
     white_names=_tog("white_names"),
     show_contracts=_tog("show_contracts",True),
     best_role_only=_tog("best_role_only"),
+    esc_blue=_tog("esc_blue"),
 )
 
 _mobile = _tog("mobile_mode")
@@ -1370,23 +1399,19 @@ if all_on:
             e=ec_opts[ec_sel]
             st.session_state.edit_contract_player={"player":e["player"],"sid":e["sid"]}; st.rerun()
     with c4:
-        # Per-player position label toggle — only relevant for OOP players
-        oop_players=[e for e in all_on if e["player"].get("_oop")]
-        st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>HIDE POS LABEL</div>",
+        # ESC Toggle for players
+        st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>TOGGLE ESC</div>",
                     unsafe_allow_html=True)
-        if oop_players:
-            hpo_opts={f"{e['player']['Player']} ({e['lbl']}) \u26a0\ufe0f":e["player"]["_key"] for e in oop_players}
-            hpo_sel=st.selectbox("",list(hpo_opts.keys()),key="hpo_sel",label_visibility="collapsed")
-            pk=hpo_opts[hpo_sel]
-            hpo=st.session_state.hide_pos_override
-            is_hidden=pk in hpo
-            btn_lbl="\u2705 Showing pos" if not is_hidden else "\u274c Hidden pos"
-            if st.button(btn_lbl,key="hpo_btn"):
-                if is_hidden: hpo.discard(pk)
-                else: hpo.add(pk)
-                st.session_state.hide_pos_override=hpo; st.rerun()
-        else:
-            st.markdown("<div style='font-size:9px;color:#374151;'>No out-of-position players</div>",unsafe_allow_html=True)
+        esc_opts={f"{e['player']['Player']} ({e['lbl']})":e["player"]["_key"] for e in all_on}
+        esc_sel=st.selectbox("",list(esc_opts.keys()),key="esc_sel",label_visibility="collapsed")
+        pk_esc=esc_opts[esc_sel]
+        esc_set=st.session_state.setdefault("esc_players",set())
+        is_esc_player=pk_esc in esc_set
+        btn_lbl="\u2705 ESC ON" if is_esc_player else "\u274c ESC OFF"
+        if st.button(btn_lbl,key="esc_btn"):
+            if is_esc_player: esc_set.discard(pk_esc)
+            else: esc_set.add(pk_esc)
+            st.session_state.esc_players=esc_set; st.rerun()
 
     # ── Reorder players within a slot ─────────────────────────────────────────
     st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:6px;'>REORDER PLAYERS IN SLOT</div>",
