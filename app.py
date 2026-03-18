@@ -729,11 +729,11 @@ def canva_slot_px(slot_x:float, slot_y:float, slot_id:str="")->tuple[int,int,str
     # Adjust x position for LWB/RWB in Canva mode only
     adjusted_x = slot_x
     if slot_id in ("LWB", "RWB"):
-        # Push wingbacks closer to edges (only in Canva)
-        if slot_x < 20:  # LWB
-            adjusted_x = 8
-        elif slot_x > 80:  # RWB
-            adjusted_x = 92
+        # Push wingbacks much closer to edges (only in Canva)
+        if slot_x < 50:  # LWB (left side)
+            adjusted_x = 3  # very close to left edge
+        else:  # RWB (right side)
+            adjusted_x = 97  # very close to right edge
     
     lx_pct = 1.0 - (slot_y - Y_MIN) / (Y_MAX - Y_MIN)  # 0=GK-side,1=ST-side
     lx = CPX + INNER_PAD_X + lx_pct * (CPW - 2*INNER_PAD_X)
