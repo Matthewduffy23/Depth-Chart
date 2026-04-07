@@ -155,10 +155,10 @@ FORMATIONS:dict[str,list[dict]]={
     "4-4-2":[
         {"id":"ST1", "label":"ST",  "x":35,"y":14,  "accepts":["ST"],             "side":"L"},
         {"id":"ST2", "label":"ST",  "x":65,"y":14,  "accepts":["ST"],             "side":"R"},
-        {"id":"LW",  "label":"LW",  "x":9, "y":39, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
+        {"id":"LW",  "label":"LW",  "x":5, "y":33, "accepts":["LW"],             "side":"L","native_toks":["LW","LWF","LAMF"]},
         {"id":"CM1", "label":"CM",  "x":34,"y":43, "accepts":["CM"],             "side":"L"},
         {"id":"CM2", "label":"CM",  "x":66,"y":43, "accepts":["CM"],             "side":"R"},
-        {"id":"RW",  "label":"RW",  "x":91,"y":39, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
+        {"id":"RW",  "label":"RW",  "x":95,"y":33, "accepts":["RW"],             "side":"R","native_toks":["RW","RWF","RAMF"]},
         {"id":"LB",  "label":"LB",  "x":12,"y":66, "accepts":["LB","LWB"],       "side":"L","wb_only":True},
         {"id":"CB1", "label":"CB",  "x":32,"y":72, "accepts":["CB","LCB","RCB"], "side":"L"},
         {"id":"CB2", "label":"CB",  "x":68,"y":72, "accepts":["CB","LCB","RCB"], "side":"R"},
