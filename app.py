@@ -312,7 +312,7 @@ def is_esc(p:dict)->bool:
 
 def player_css_color(yrs:int,loan:bool,loaned_out:bool=False,youth:bool=False,esc:bool=False,esc_blue:bool=False)->str:
     if esc and esc_blue: return "#60a5fa"  # light blue for ESC when toggle on
-    if loaned_out: return "#c084fc"   # light purple — loaned out
+    if loaned_out: return "#eab308"   # yellow — loaned out
     if youth:      return "#9ca3af"   # light grey — youth player
     if loan:       return "#22c55e"   # green — on loan (incoming)
     if yrs==0:     return "#ef4444"   # red — out of contract
@@ -771,8 +771,7 @@ def render_pitch(
                f'color:#ef4444;font-size:{bsz};font-weight:900;letter-spacing:.1em;'
                f'margin-bottom:3px;background:rgba(10,15,28,.97);">{slot["label"]}</div>')
         rows=""
-        _slot_ns_list=st.session_state.get("new_signing",{}).get(slot["id"],[])
-        if isinstance(_slot_ns_list,dict): _slot_ns_list=[_slot_ns_list]  # back-compat
+        _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
         for i,p in enumerate(ps):
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
@@ -781,8 +780,7 @@ def render_pitch(
             col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt,_esc,esc_blue))
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             _hpo=st.session_state.get('hide_pos_override',set())
-            _hop=st.session_state.get('hide_oop_players',set())
-            oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo and p.get('_key','') not in _hop) else ''
+            oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
             lo=is_loaned_out(p); yt=is_youth(p)
             if loan:
                 suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
@@ -808,18 +806,18 @@ def render_pitch(
             rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
                    f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
                    f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
-        for _sn in _slot_ns_list:
-            _sn_lbl=_sn.get("label","NEW SIGNING") or "NEW SIGNING"
-            _sn_sub=_sn.get("sub","")
-            _sn_col=_sn.get("color","#ef4444")
-            mt_ns="margin-top:4px;" if (ps or rows) else ""
+        if _slot_ns:
+            _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
+            _sn_sub=_slot_ns.get("sub","")
+            _sn_col=_slot_ns.get("color","#ef4444")
+            mt_ns="margin-top:4px;" if ps else ""
             rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
                     f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;'
                     f'text-shadow:0 0 8px rgba(0,0,0,1);">{_sn_lbl}</div>')
             if _sn_sub:
                 rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
                         f'line-height:1.3;">{_sn_sub}</div>')
-        if not ps and not _slot_ns_list:
+        if not ps and not _slot_ns:
             rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
         sx=float(slot.get("x",50))
         is_edge=(sx<20 or sx>80)
@@ -860,8 +858,7 @@ def render_pitch(
                    f'color:#1f2937;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
                    f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
             rows=""
-            _slot_ns_list=st.session_state.get("new_signing",{}).get(slot["id"],[])
-            if isinstance(_slot_ns_list,dict): _slot_ns_list=[_slot_ns_list]
+            _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
             for i,p in enumerate(ps):
                 yrs=contract_years(p.get("Contract expires",""))
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
@@ -870,8 +867,7 @@ def render_pitch(
                 col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt,_esc,esc_blue))
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 _hpo=st.session_state.get("hide_pos_override",set())
-                _hop=st.session_state.get("hide_oop_players",set())
-                oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo and p.get('_key','') not in _hop) else ''
+                oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
                 lo=is_loaned_out(p); yt=is_youth(p)
                 if loan:
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
@@ -884,17 +880,17 @@ def render_pitch(
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
                        f'{p["Player"]}{suffix}</div>{rs_html}')
-            for _sn in _slot_ns_list:
-                _sn_lbl=_sn.get("label","NEW SIGNING") or "NEW SIGNING"
-                _sn_sub=_sn.get("sub","")
-                _sn_col=_sn.get("color","#ef4444")
-                mt_ns="margin-top:4px;" if (ps or rows) else ""
+            if _slot_ns:
+                _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
+                _sn_sub=_slot_ns.get("sub","")
+                _sn_col=_slot_ns.get("color","#ef4444")
+                mt_ns="margin-top:4px;" if ps else ""
                 rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
                         f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;">{_sn_lbl}</div>')
                 if _sn_sub:
                     rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
                             f'line-height:1.3;">{_sn_sub}</div>')
-            if not ps and not _slot_ns_list:
+            if not ps and not _slot_ns:
                 rows=f'<div style="color:#4b5563;font-size:{ssz};">&#8212;</div>'
             return (f'<div style="position:absolute;left:{lx}px;top:{ly}px;'
                     f'transform:{tx};text-align:{ta};z-index:10;">'
@@ -913,7 +909,7 @@ def render_pitch(
                 f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&ensp;'
                 f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
                 f'<span style="color:#22c55e;font-weight:700;">On Loan</span>&ensp;'
-                f'<span style="color:#c084fc;font-weight:700;">Loaned Out</span>&ensp;'
+                f'<span style="color:#eab308;font-weight:700;">Loaned Out</span>&ensp;'
                 f'<span style="color:#9ca3af;font-weight:700;">Youth</span>&ensp;'
                 f'{esc_legend}'
                 f'<span style="color:#6b7280;">{league} · {formation}</span>'
@@ -972,7 +968,7 @@ def render_pitch(
                 f'<span style="color:#f59e0b;">Final Year</span>'
                 f'<span style="color:#ef4444;">Out of Contract</span>'
                 f'<span style="color:#22c55e;">On Loan</span>'
-                f'<span style="color:#c084fc;">Loaned Out</span>'
+                f'<span style="color:#eab308;">Loaned Out</span>'
                 f'<span style="color:#9ca3af;">Youth</span>{esc_legend_p}</div>')
 
     # The pitch uses padding-bottom:142% to maintain aspect ratio.
@@ -1096,8 +1092,7 @@ document.fonts.ready.then(function(){{
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
              "last_team":None,"last_formation":None,"edit_contract_player":None,
-             "hide_pos_override":set(),"new_signing":{},"esc_players":set(),
-             "hide_oop_players":set()}.items():
+             "hide_pos_override":set(),"new_signing":{},"esc_players":set()}.items():
     if k not in st.session_state: st.session_state[k]=v
 
 def _tog(k,d=False): return st.session_state.get(k,d)
@@ -1252,7 +1247,7 @@ with st.sidebar:
         na_=st.number_input("Assists",0,100,0,key="na_")
         ne_=st.text_input("Contract expires","2026-06-30",key="ne_")
         nl_=st.checkbox("On Loan? (incoming, green)",key="nl_")
-        nlo_=st.checkbox("Loaned Out? (purple)",key="nlo_")
+        nlo_=st.checkbox("Loaned Out? (yellow)",key="nlo_")
         nyt_=st.checkbox("Youth Player? (grey)",key="nyt_")
         sl_opts={f"{s['label']} ({s['id']})":s["id"] for s in FORMATIONS.get(formation,[])}
         ns_=st.selectbox("Add to slot",list(sl_opts.keys()),key="ns_")
@@ -1418,43 +1413,15 @@ if all_on:
             else: esc_set.add(pk_esc)
             st.session_state.esc_players=esc_set; st.rerun()
 
-    # ── Hide out-of-position label for individual players ─────────────────────
-    st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:4px;'>TOGGLE POSITION LABEL (e.g. hide DMF tag)</div>",
-                unsafe_allow_html=True)
-    st.markdown("<div style='font-size:8px;color:#374151;margin-bottom:4px;'>Hides the (POS) suffix shown when a player is playing out of position</div>",
-                unsafe_allow_html=True)
-    hop_c1,hop_c2=st.columns([3,1])
-    with hop_c1:
-        oop_eligible=[e for e in all_on if e["player"].get("_show_pos")]
-        if oop_eligible:
-            hop_opts={f"{e['player']['Player']} ({e['lbl']})":e["player"]["_key"] for e in oop_eligible}
-            hop_sel=st.selectbox("",list(hop_opts.keys()),key="hop_sel",label_visibility="collapsed")
-            pk_hop=hop_opts[hop_sel]
-            hop_set=st.session_state.setdefault("hide_oop_players",set())
-            is_hidden=pk_hop in hop_set
-            hop_btn_lbl="\U0001f441 Showing tag" if not is_hidden else "\U0001f6ab Tag hidden"
-            with hop_c2:
-                st.markdown("<div style='margin-top:4px;'></div>",unsafe_allow_html=True)
-                if st.button(hop_btn_lbl,key="hop_btn"):
-                    if is_hidden: hop_set.discard(pk_hop)
-                    else: hop_set.add(pk_hop)
-                    st.session_state.hide_oop_players=hop_set; st.rerun()
-        else:
-            st.markdown("<div style='font-size:9px;color:#374151;'>No out-of-position players to toggle</div>",unsafe_allow_html=True)
-
     # ── Reorder players within a slot ─────────────────────────────────────────
     st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:6px;'>REORDER PLAYERS IN SLOT</div>",
                 unsafe_allow_html=True)
-    # Build slot options that have more than 1 entry (players + new signings)
+    # Build slot options that have more than 1 player (only those are reorderable)
     reorder_slots={}
-    _ns_d=st.session_state.get("new_signing",{})
     for sl in slots:
         ps=slot_map.get(sl["id"],[])
-        _sl_ns=_ns_d.get(sl["id"],[])
-        if isinstance(_sl_ns,dict): _sl_ns=[_sl_ns]
-        total=len(ps)+len(_sl_ns)
-        if total>1:
-            reorder_slots[f"{sl['label']} ({sl['id']}) — {total} entries"]=sl["id"]
+        if len(ps)>1:
+            reorder_slots[f"{sl['label']} ({sl['id']}) — {len(ps)} players"]=sl["id"]
     # Also depth if >1
     if len(depth)>1:
         reorder_slots[f"DEPTH — {len(depth)} players"]="_depth"
@@ -1464,71 +1431,32 @@ if all_on:
         with ro_c1:
             ro_slot_lbl=st.selectbox("Slot",list(reorder_slots.keys()),key="ro_slot",label_visibility="visible")
             ro_sid=reorder_slots[ro_slot_lbl]
+            # Get current list for that slot
             if ro_sid=="_depth":
                 cur_list=st.session_state.depth
-                ro_player_opts=[f"#{i+1} {p['Player']}" for i,p in enumerate(cur_list)]
-                ro_player_sel=st.selectbox("Player to move",ro_player_opts,key="ro_player",label_visibility="visible")
-                ro_idx=ro_player_opts.index(ro_player_sel)
-                ro_is_ns=False
             else:
                 cur_list=st.session_state.slot_map.get(ro_sid,[])
-                _sl_ns=_ns_d.get(ro_sid,[])
-                if isinstance(_sl_ns,dict): _sl_ns=[_sl_ns]
-                # Unified list: players first then new signings (will be reordered together)
-                # Represent as list of dicts with a type flag
-                combined=[{"type":"player","idx":i,"label":f"#{i+1} {p['Player']}"} for i,p in enumerate(cur_list)]
-                combined+=[{"type":"ns","idx":i,"label":f"#{len(cur_list)+i+1} {s.get('label','NEW SIGNING')}{(' — '+s['sub']) if s.get('sub') else ''}"} for i,s in enumerate(_sl_ns)]
-                ro_combo_opts=[c["label"] for c in combined]
-                ro_player_sel=st.selectbox("Entry to move",ro_combo_opts,key="ro_player",label_visibility="visible")
-                ro_combo_idx=ro_combo_opts.index(ro_player_sel)
-                ro_idx=combined[ro_combo_idx]["idx"]
-                ro_is_ns=combined[ro_combo_idx]["type"]=="ns"
+            ro_player_opts=[f"#{i+1} {p['Player']}" for i,p in enumerate(cur_list)]
+            ro_player_sel=st.selectbox("Player to move",ro_player_opts,key="ro_player",label_visibility="visible")
+            ro_idx=ro_player_opts.index(ro_player_sel)
         with ro_c2:
             st.markdown("<div style='margin-top:24px;'></div>",unsafe_allow_html=True)
             rc1,rc2=st.columns(2)
             with rc1:
-                if st.button("⬆ Move Up",key="ro_up"):
-                    if ro_sid=="_depth":
-                        if ro_idx>0:
-                            lst=list(cur_list); lst[ro_idx-1],lst[ro_idx]=lst[ro_idx],lst[ro_idx-1]
-                            st.session_state.depth=lst; st.rerun()
-                    else:
-                        # Move within the combined space
-                        players=list(st.session_state.slot_map.get(ro_sid,[]))
-                        ns_list=list(_ns_d.get(ro_sid,[]) or [])
-                        if isinstance(ns_list,dict): ns_list=[ns_list]
-                        all_entries=[("p",i) for i in range(len(players))]+[("n",i) for i in range(len(ns_list))]
-                        cur_combo=[c["type"][0] for c in combined]
-                        flat_idx=ro_combo_idx
-                        if flat_idx>0:
-                            # Swap in combined space
-                            a,b=all_entries[flat_idx-1],all_entries[flat_idx]
-                            all_entries[flat_idx-1],all_entries[flat_idx]=b,a
-                            new_p=[players[i] for t,i in all_entries if t=="p"]
-                            new_n=[ns_list[i] for t,i in all_entries if t=="n"]
-                            st.session_state.slot_map[ro_sid]=new_p
-                            _ns_d[ro_sid]=new_n; st.session_state.new_signing=_ns_d; st.rerun()
+                if st.button("⬆ Move Up",key="ro_up") and ro_idx>0:
+                    lst=list(cur_list)
+                    lst[ro_idx-1],lst[ro_idx]=lst[ro_idx],lst[ro_idx-1]
+                    if ro_sid=="_depth": st.session_state.depth=lst
+                    else: st.session_state.slot_map[ro_sid]=lst
+                    st.rerun()
             with rc2:
-                if st.button("⬇ Move Down",key="ro_dn"):
-                    if ro_sid=="_depth":
-                        if ro_idx<len(cur_list)-1:
-                            lst=list(cur_list); lst[ro_idx],lst[ro_idx+1]=lst[ro_idx+1],lst[ro_idx]
-                            st.session_state.depth=lst; st.rerun()
-                    else:
-                        players=list(st.session_state.slot_map.get(ro_sid,[]))
-                        ns_list=list(_ns_d.get(ro_sid,[]) or [])
-                        if isinstance(ns_list,dict): ns_list=[ns_list]
-                        all_entries=[("p",i) for i in range(len(players))]+[("n",i) for i in range(len(ns_list))]
-                        flat_idx=ro_combo_idx
-                        if flat_idx<len(all_entries)-1:
-                            a,b=all_entries[flat_idx],all_entries[flat_idx+1]
-                            all_entries[flat_idx],all_entries[flat_idx+1]=b,a
-                            new_p=[players[i] for t,i in all_entries if t=="p"]
-                            new_n=[ns_list[i] for t,i in all_entries if t=="n"]
-                            st.session_state.slot_map[ro_sid]=new_p
-                            _ns_d[ro_sid]=new_n; st.session_state.new_signing=_ns_d; st.rerun()
-            total_entries=len(depth) if ro_sid=="_depth" else len(combined)
-            st.markdown(f"<div style='font-size:9px;color:#4b5563;margin-top:6px;'>Position {ro_combo_idx+1 if ro_sid!='_depth' else ro_idx+1} of {total_entries}<br>1st player = starter shown bold</div>",
+                if st.button("⬇ Move Down",key="ro_dn") and ro_idx<len(cur_list)-1:
+                    lst=list(cur_list)
+                    lst[ro_idx],lst[ro_idx+1]=lst[ro_idx+1],lst[ro_idx]
+                    if ro_sid=="_depth": st.session_state.depth=lst
+                    else: st.session_state.slot_map[ro_sid]=lst
+                    st.rerun()
+            st.markdown(f"<div style='font-size:9px;color:#4b5563;margin-top:6px;'>Position {ro_idx+1} of {len(cur_list)}<br>1st player = starter shown bold</div>",
                         unsafe_allow_html=True)
     else:
         st.markdown("<div style='font-size:9px;color:#374151;'>No slots with multiple players to reorder</div>",unsafe_allow_html=True)
@@ -1541,56 +1469,28 @@ if all_on:
     with ns_c1:
         ns_slot_sel=st.selectbox("Slot",list(ns_slot_opts.keys()),key="ns_slot_sel",label_visibility="visible")
         ns_sid=ns_slot_opts[ns_slot_sel]
-        ns_dict=st.session_state.setdefault("new_signing",{})
-        # Back-compat: migrate old single-dict format to list
-        if ns_sid in ns_dict and isinstance(ns_dict[ns_sid],dict):
-            ns_dict[ns_sid]=[ns_dict[ns_sid]]
-        ns_existing_list=ns_dict.get(ns_sid,[])
-        st.markdown(f"<div style='font-size:9px;color:#4b5563;margin-top:4px;'>{len(ns_existing_list)} signing(s) in this slot</div>",unsafe_allow_html=True)
+        ns_existing=st.session_state.get("new_signing",{}).get(ns_sid)
+        ns_on=bool(ns_existing)
     with ns_c2:
-        ns_lbl_val=st.text_input("Label (caps)","NEW SIGNING",key="ns_lbl_val",
+        _def_lbl=ns_existing.get("label","NEW SIGNING") if ns_existing else "NEW SIGNING"
+        _def_sub=ns_existing.get("sub","") if ns_existing else ""
+        ns_lbl_val=st.text_input("Label (caps)",_def_lbl,key="ns_lbl_val",
                                   help="e.g. NEW SIGNING, TARGET, TRIALIST")
-        ns_sub_val=st.text_input("Subtitle (optional)","",key="ns_sub_val",
+        ns_sub_val=st.text_input("Subtitle (optional)",_def_sub,key="ns_sub_val",
                                   help="e.g. Wide Creator U23")
+        _def_col=ns_existing.get("color","#ef4444") if ns_existing else "#ef4444"
         ns_col_val=st.selectbox("Colour",["#ef4444","#f97316","#eab308"],
-                                 index=0,
+                                 index=["#ef4444","#f97316","#eab308"].index(_def_col) if _def_col in ["#ef4444","#f97316","#eab308"] else 0,
                                  format_func=lambda x:{"#ef4444":"Red","#f97316":"Orange","#eab308":"Yellow"}[x],
                                  key="ns_col_val")
-    if st.button("🟠 Add to slot",key="ns_add_btn"):
+    ns_btn_lbl="✅ Showing — click to remove" if ns_on else "🟠 Add to slot"
+    if st.button(ns_btn_lbl,key="ns_toggle_btn"):
         ns_dict=st.session_state.setdefault("new_signing",{})
-        if ns_sid not in ns_dict or isinstance(ns_dict[ns_sid],dict):
-            ns_dict[ns_sid]=[]
-        ns_dict[ns_sid].append({"label":ns_lbl_val.strip() or "NEW SIGNING","sub":ns_sub_val.strip(),"color":ns_col_val})
+        if ns_on:
+            ns_dict.pop(ns_sid,None)
+        else:
+            ns_dict[ns_sid]={"label":ns_lbl_val.strip() or "NEW SIGNING","sub":ns_sub_val.strip(),"color":ns_col_val}
         st.session_state.new_signing=ns_dict; st.rerun()
-
-    # Show existing signings for the selected slot with remove + reorder
-    ns_dict=st.session_state.get("new_signing",{})
-    if ns_sid in ns_dict and isinstance(ns_dict[ns_sid],dict):
-        ns_dict[ns_sid]=[ns_dict[ns_sid]]
-    cur_ns=ns_dict.get(ns_sid,[])
-    if cur_ns:
-        st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:8px;margin-bottom:4px;'>SIGNINGS IN SLOT — reorder / remove</div>",unsafe_allow_html=True)
-        for _ni,_sn in enumerate(cur_ns):
-            _lbl=_sn.get("label","NEW SIGNING")
-            _sub=_sn.get("sub","")
-            _disp=f"{_ni+1}. {_lbl}" + (f" — {_sub}" if _sub else "")
-            _nc1,_nc2,_nc3,_nc4=st.columns([3,1,1,1])
-            with _nc1:
-                st.markdown(f"<div style='font-size:10px;color:#c084fc;padding-top:6px;'>{_disp}</div>",unsafe_allow_html=True)
-            with _nc2:
-                if st.button("⬆",key=f"ns_up_{ns_sid}_{_ni}") and _ni>0:
-                    lst=list(cur_ns); lst[_ni-1],lst[_ni]=lst[_ni],lst[_ni-1]
-                    ns_dict[ns_sid]=lst; st.session_state.new_signing=ns_dict; st.rerun()
-            with _nc3:
-                if st.button("⬇",key=f"ns_dn_{ns_sid}_{_ni}") and _ni<len(cur_ns)-1:
-                    lst=list(cur_ns); lst[_ni],lst[_ni+1]=lst[_ni+1],lst[_ni]
-                    ns_dict[ns_sid]=lst; st.session_state.new_signing=ns_dict; st.rerun()
-            with _nc4:
-                if st.button("🗑",key=f"ns_rm_{ns_sid}_{_ni}"):
-                    lst=list(cur_ns); lst.pop(_ni)
-                    if lst: ns_dict[ns_sid]=lst
-                    else: ns_dict.pop(ns_sid,None)
-                    st.session_state.new_signing=ns_dict; st.rerun()
 
 
 # ── Full squad ─────────────────────────────────────────────────────────────────
