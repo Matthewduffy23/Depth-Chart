@@ -312,7 +312,7 @@ def is_esc(p:dict)->bool:
 
 def player_css_color(yrs:int,loan:bool,loaned_out:bool=False,youth:bool=False,esc:bool=False,esc_blue:bool=False)->str:
     if esc and esc_blue: return "#60a5fa"  # light blue for ESC when toggle on
-    if loaned_out: return "#eab308"   # yellow — loaned out
+    if loaned_out: return "#c084fc"   # light purple — loaned out
     if youth:      return "#9ca3af"   # light grey — youth player
     if loan:       return "#22c55e"   # green — on loan (incoming)
     if yrs==0:     return "#ef4444"   # red — out of contract
@@ -771,16 +771,30 @@ def render_pitch(
                f'color:#ef4444;font-size:{bsz};font-weight:900;letter-spacing:.1em;'
                f'margin-bottom:3px;background:rgba(10,15,28,.97);">{slot["label"]}</div>')
         rows=""
-        _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
+        real_shown=0
         for i,p in enumerate(ps):
+            if p.get("_is_ns"):
+                _sn_lbl=p.get("_ns_label","NEW SIGNING") or "NEW SIGNING"
+                _sn_sub=p.get("_ns_sub","")
+                _sn_col=p.get("_ns_color","#ef4444")
+                mt_ns="margin-top:4px;" if rows else ""
+                rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
+                        f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;'
+                        f'text-shadow:0 0 8px rgba(0,0,0,1);">{_sn_lbl}</div>')
+                if _sn_sub:
+                    rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
+                            f'line-height:1.3;">{_sn_sub}</div>')
+                continue
+            ri=real_shown; real_shown+=1
             yrs=contract_years(p.get("Contract expires",""))
             yr_str=f"+{yrs}" if yrs>=0 else "+?"
-            loan=is_loan(p); fw="800" if i==0 else "500"
+            loan=is_loan(p); fw="800" if ri==0 else "500"
             _lo=is_loaned_out(p); _yt=is_youth(p); _esc=is_esc(p)
             col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt,_esc,esc_blue))
             multi=" \U0001f501" if _multi_role(p.get("Position","")) else ""
             _hpo=st.session_state.get('hide_pos_override',set())
-            oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
+            _hop=st.session_state.get('hide_oop_players',set())
+            oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo and p.get('_key','') not in _hop) else ''
             lo=is_loaned_out(p); yt=is_youth(p)
             if loan:
                 suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
@@ -800,24 +814,13 @@ def render_pitch(
             pos_html=(f'<div style="color:#9ca3af;font-size:{ssz};line-height:1.2;">{all_pos}</div>'
                       ) if (show_positions and all_pos) else ""
             rs_html=(best_role_html(p,df_sc,rsz) if (show_roles and best_role_only)
-                     else all_roles_html(p,df_sc,rsz) if (i==0 and show_roles)
-                     else best_role_html(p,df_sc,rsz) if (i>0 and show_roles) else "")
-            mt="margin-top:5px;" if i>0 else ""
+                     else all_roles_html(p,df_sc,rsz) if (ri==0 and show_roles)
+                     else best_role_html(p,df_sc,rsz) if (ri>0 and show_roles) else "")
+            mt="margin-top:5px;" if rows else ""
             rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.45;font-weight:{fw};{mt}'
                    f'white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,1),0 0 4px rgba(0,0,0,1);">'
                    f'{p["Player"]} {suffix}</div>{pos_html}{stat_html}{rs_html}')
-        if _slot_ns:
-            _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
-            _sn_sub=_slot_ns.get("sub","")
-            _sn_col=_slot_ns.get("color","#ef4444")
-            mt_ns="margin-top:4px;" if ps else ""
-            rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
-                    f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;'
-                    f'text-shadow:0 0 8px rgba(0,0,0,1);">{_sn_lbl}</div>')
-            if _sn_sub:
-                rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
-                        f'line-height:1.3;">{_sn_sub}</div>')
-        if not ps and not _slot_ns:
+        if not rows:
             rows=f'<div style="color:#1f2937;font-size:{ssz};">&#8212;</div>'
         sx=float(slot.get("x",50))
         is_edge=(sx<20 or sx>80)
@@ -858,39 +861,54 @@ def render_pitch(
                    f'color:#1f2937;font-size:{bsz};font-weight:900;letter-spacing:.07em;'
                    f'margin-bottom:5px;white-space:nowrap;">{slot["label"]}</div>')
             rows=""
-            _slot_ns=st.session_state.get("new_signing",{}).get(slot["id"])
+            _slot_ns_list=st.session_state.get("new_signing",{}).get(slot["id"],[])
+            if isinstance(_slot_ns_list,dict): _slot_ns_list=[_slot_ns_list]
+            real_shown=0
             for i,p in enumerate(ps):
+                if p.get("_is_ns"):
+                    _sn_lbl=p.get("_ns_label","NEW SIGNING") or "NEW SIGNING"
+                    _sn_sub=p.get("_ns_sub","")
+                    _sn_col=p.get("_ns_color","#ef4444")
+                    mt_ns="margin-top:4px;" if rows else ""
+                    rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
+                            f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;">{_sn_lbl}</div>')
+                    if _sn_sub:
+                        rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
+                                f'line-height:1.3;">{_sn_sub}</div>')
+                    continue
+                ri=real_shown; real_shown+=1
                 yrs=contract_years(p.get("Contract expires",""))
                 yr_str=f"+{yrs}" if yrs>=0 else "+?"
-                loan=is_loan(p); fw="700" if i==0 else "400"
+                loan=is_loan(p); fw="700" if ri==0 else "400"
                 _lo=is_loaned_out(p); _yt=is_youth(p); _esc=is_esc(p)
                 col=("#ffffff" if white_names else player_css_color(yrs,loan,_lo,_yt,_esc,esc_blue))
                 multi=" 🔁" if _multi_role(p.get("Position","")) else ""
                 _hpo=st.session_state.get("hide_pos_override",set())
-                oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo) else ''
+                _hop=st.session_state.get("hide_oop_players",set())
+                oop_s=f" ({p['_primary_pos']})" if (p.get('_show_pos') and p.get('_key','') not in _hpo and p.get('_key','') not in _hop) else ''
                 lo=is_loaned_out(p); yt=is_youth(p)
                 if loan:
                     suffix=f" L{oop_s}{multi}" if show_contracts else f"{oop_s}{multi}"
                 else:
                     suffix=f"{(yr_str if show_contracts else '')}{oop_s}{multi}"
-                mt="margin-top:5px;" if i>0 else ""
+                mt="margin-top:5px;" if rows else ""
                 rs_html=(best_role_html(p,df_sc,rsz,flip=(ta=="right")) if (show_roles and best_role_only)
-                         else all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (i==0 and show_roles)
-                         else best_role_html(p,df_sc,rsz,flip=(ta=="right")) if (i>0 and show_roles) else "")
+                         else all_roles_html(p,df_sc,rsz,flip=(ta=="right")) if (ri==0 and show_roles)
+                         else best_role_html(p,df_sc,rsz,flip=(ta=="right")) if (ri>0 and show_roles) else "")
                 rows+=(f'<div style="color:{col};font-size:{nsz};line-height:1.4;font-weight:{fw};{mt}'
                        f'white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,1);">'
                        f'{p["Player"]}{suffix}</div>{rs_html}')
-            if _slot_ns:
-                _sn_lbl=_slot_ns.get("label","NEW SIGNING") or "NEW SIGNING"
-                _sn_sub=_slot_ns.get("sub","")
-                _sn_col=_slot_ns.get("color","#ef4444")
-                mt_ns="margin-top:4px;" if ps else ""
+            for _sn in _slot_ns_list:
+                _sn_lbl=_sn.get("label","NEW SIGNING") or "NEW SIGNING"
+                _sn_sub=_sn.get("sub","")
+                _sn_col=_sn.get("color","#ef4444")
+                mt_ns="margin-top:4px;" if rows else ""
                 rows+=(f'<div style="color:{_sn_col};font-size:{nsz};font-weight:800;{mt_ns}'
                         f'letter-spacing:.08em;line-height:1.4;text-transform:uppercase;">{_sn_lbl}</div>')
                 if _sn_sub:
                     rows+=(f'<div style="color:{_sn_col};font-size:{rsz};font-weight:400;'
                             f'line-height:1.3;">{_sn_sub}</div>')
-            if not ps and not _slot_ns:
+            if not rows:
                 rows=f'<div style="color:#4b5563;font-size:{ssz};">&#8212;</div>'
             return (f'<div style="position:absolute;left:{lx}px;top:{ly}px;'
                     f'transform:{tx};text-align:{ta};z-index:10;">'
@@ -909,7 +927,7 @@ def render_pitch(
                 f'<span style="color:#ef4444;font-weight:700;">Out of Contract</span>&ensp;'
                 f'<span style="color:#f59e0b;font-weight:700;">Final Year</span>&ensp;'
                 f'<span style="color:#22c55e;font-weight:700;">On Loan</span>&ensp;'
-                f'<span style="color:#eab308;font-weight:700;">Loaned Out</span>&ensp;'
+                f'<span style="color:#c084fc;font-weight:700;">Loaned Out</span>&ensp;'
                 f'<span style="color:#9ca3af;font-weight:700;">Youth</span>&ensp;'
                 f'{esc_legend}'
                 f'<span style="color:#6b7280;">{league} · {formation}</span>'
@@ -968,7 +986,7 @@ def render_pitch(
                 f'<span style="color:#f59e0b;">Final Year</span>'
                 f'<span style="color:#ef4444;">Out of Contract</span>'
                 f'<span style="color:#22c55e;">On Loan</span>'
-                f'<span style="color:#eab308;">Loaned Out</span>'
+                f'<span style="color:#c084fc;">Loaned Out</span>'
                 f'<span style="color:#9ca3af;">Youth</span>{esc_legend_p}</div>')
 
     # The pitch uses padding-bottom:142% to maintain aspect ratio.
@@ -1092,7 +1110,8 @@ document.fonts.ready.then(function(){{
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
              "last_team":None,"last_formation":None,"edit_contract_player":None,
-             "hide_pos_override":set(),"new_signing":{},"esc_players":set()}.items():
+             "hide_pos_override":set(),"new_signing":{},"esc_players":set(),
+             "hide_oop_players":set()}.items():
     if k not in st.session_state: st.session_state[k]=v
 
 def _tog(k,d=False): return st.session_state.get(k,d)
@@ -1247,7 +1266,7 @@ with st.sidebar:
         na_=st.number_input("Assists",0,100,0,key="na_")
         ne_=st.text_input("Contract expires","2026-06-30",key="ne_")
         nl_=st.checkbox("On Loan? (incoming, green)",key="nl_")
-        nlo_=st.checkbox("Loaned Out? (yellow)",key="nlo_")
+        nlo_=st.checkbox("Loaned Out? (purple)",key="nlo_")
         nyt_=st.checkbox("Youth Player? (grey)",key="nyt_")
         sl_opts={f"{s['label']} ({s['id']})":s["id"] for s in FORMATIONS.get(formation,[])}
         ns_=st.selectbox("Add to slot",list(sl_opts.keys()),key="ns_")
@@ -1364,24 +1383,28 @@ st.markdown("---")
 all_on=[]
 for sl in slots:
     for p in slot_map.get(sl["id"],[]):
-        all_on.append({"sid":sl["id"],"lbl":sl["label"],"player":p})
+        _disp=p.get("_ns_label","NEW SIGNING") if p.get("_is_ns") else p["Player"]
+        all_on.append({"sid":sl["id"],"lbl":sl["label"],"player":p,"disp":_disp})
 for p in depth:
-    all_on.append({"sid":"_depth","lbl":"DEPTH","player":p})
+    all_on.append({"sid":"_depth","lbl":"DEPTH","player":p,"disp":p["Player"]})
+# Real players only (no NS) for move/edit/ESC
+real_on=[e for e in all_on if not e["player"].get("_is_ns")]
 
 if all_on:
     c1,c2,c3,c4=st.columns(4)
     with c1:
         st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>MOVE</div>",
                     unsafe_allow_html=True)
-        mv_opts={f"{e['player']['Player']} ({e['lbl']})":e for e in all_on}
-        mv_sel=st.selectbox("",list(mv_opts.keys()),key="mv_sel",label_visibility="collapsed")
-        if st.button("Select for Move"):
-            e=mv_opts[mv_sel]
-            st.session_state.move_player={"player":e["player"],"from_slot":e["sid"]}; st.rerun()
+        mv_opts={f"{e['disp']} ({e['lbl']})":e for e in real_on}
+        if mv_opts:
+            mv_sel=st.selectbox("",list(mv_opts.keys()),key="mv_sel",label_visibility="collapsed")
+            if st.button("Select for Move"):
+                e=mv_opts[mv_sel]
+                st.session_state.move_player={"player":e["player"],"from_slot":e["sid"]}; st.rerun()
     with c2:
         st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>REMOVE</div>",
                     unsafe_allow_html=True)
-        rm_opts={f"{e['player']['Player']} ({e['lbl']})":e for e in all_on}
+        rm_opts={f"{e['disp']} ({e['lbl']})":e for e in all_on}
         rm_sel=st.selectbox("",list(rm_opts.keys()),key="rm_sel",label_visibility="collapsed")
         if st.button("\U0001f5d1 Remove"):
             e=rm_opts[rm_sel]; sid=e["sid"]; pk=e["player"]["_key"]
@@ -1393,18 +1416,20 @@ if all_on:
     with c3:
         st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>EDIT CONTRACT</div>",
                     unsafe_allow_html=True)
-        ec_opts={f"{e['player']['Player']} ({e['lbl']})":e for e in all_on}
-        ec_sel=st.selectbox("",list(ec_opts.keys()),key="ec_sel",label_visibility="collapsed")
-        if st.button("\u270f\ufe0f Edit Contract"):
-            e=ec_opts[ec_sel]
-            st.session_state.edit_contract_player={"player":e["player"],"sid":e["sid"]}; st.rerun()
+        ec_opts={f"{e['disp']} ({e['lbl']})":e for e in real_on}
+        if ec_opts:
+            ec_sel=st.selectbox("",list(ec_opts.keys()),key="ec_sel",label_visibility="collapsed")
+            if st.button("\u270f\ufe0f Edit Contract"):
+                e=ec_opts[ec_sel]
+                st.session_state.edit_contract_player={"player":e["player"],"sid":e["sid"]}; st.rerun()
     with c4:
         # ESC Toggle for players
         st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-bottom:3px;'>TOGGLE ESC</div>",
                     unsafe_allow_html=True)
-        esc_opts={f"{e['player']['Player']} ({e['lbl']})":e["player"]["_key"] for e in all_on}
-        esc_sel=st.selectbox("",list(esc_opts.keys()),key="esc_sel",label_visibility="collapsed")
-        pk_esc=esc_opts[esc_sel]
+        esc_opts={f"{e['disp']} ({e['lbl']})":e["player"]["_key"] for e in real_on}
+        if esc_opts:
+            esc_sel=st.selectbox("",list(esc_opts.keys()),key="esc_sel",label_visibility="collapsed")
+            pk_esc=esc_opts[esc_sel]
         esc_set=st.session_state.setdefault("esc_players",set())
         is_esc_player=pk_esc in esc_set
         btn_lbl="\u2705 ESC ON" if is_esc_player else "\u274c ESC OFF"
@@ -1413,16 +1438,38 @@ if all_on:
             else: esc_set.add(pk_esc)
             st.session_state.esc_players=esc_set; st.rerun()
 
+    # ── Hide out-of-position label for individual players ─────────────────────
+    st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:4px;'>TOGGLE POSITION LABEL (e.g. hide DMF tag)</div>",
+                unsafe_allow_html=True)
+    st.markdown("<div style='font-size:8px;color:#374151;margin-bottom:4px;'>Hides the (POS) suffix shown when a player is playing out of position</div>",
+                unsafe_allow_html=True)
+    hop_c1,hop_c2=st.columns([3,1])
+    with hop_c1:
+        oop_eligible=[e for e in real_on if e["player"].get("_show_pos")]
+        if oop_eligible:
+            hop_opts={f"{e['disp']} ({e['lbl']})":e["player"]["_key"] for e in oop_eligible}
+            hop_sel=st.selectbox("",list(hop_opts.keys()),key="hop_sel",label_visibility="collapsed")
+            pk_hop=hop_opts[hop_sel]
+            hop_set=st.session_state.setdefault("hide_oop_players",set())
+            is_hidden=pk_hop in hop_set
+            hop_btn_lbl="\U0001f441 Showing tag" if not is_hidden else "\U0001f6ab Tag hidden"
+            with hop_c2:
+                st.markdown("<div style='margin-top:4px;'></div>",unsafe_allow_html=True)
+                if st.button(hop_btn_lbl,key="hop_btn"):
+                    if is_hidden: hop_set.discard(pk_hop)
+                    else: hop_set.add(pk_hop)
+                    st.session_state.hide_oop_players=hop_set; st.rerun()
+        else:
+            st.markdown("<div style='font-size:9px;color:#374151;'>No out-of-position players to toggle</div>",unsafe_allow_html=True)
+
     # ── Reorder players within a slot ─────────────────────────────────────────
     st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:14px;margin-bottom:6px;'>REORDER PLAYERS IN SLOT</div>",
                 unsafe_allow_html=True)
-    # Build slot options that have more than 1 player (only those are reorderable)
     reorder_slots={}
     for sl in slots:
         ps=slot_map.get(sl["id"],[])
         if len(ps)>1:
-            reorder_slots[f"{sl['label']} ({sl['id']}) — {len(ps)} players"]=sl["id"]
-    # Also depth if >1
+            reorder_slots[f"{sl['label']} ({sl['id']}) — {len(ps)} entries"]=sl["id"]
     if len(depth)>1:
         reorder_slots[f"DEPTH — {len(depth)} players"]="_depth"
 
@@ -1431,12 +1478,11 @@ if all_on:
         with ro_c1:
             ro_slot_lbl=st.selectbox("Slot",list(reorder_slots.keys()),key="ro_slot",label_visibility="visible")
             ro_sid=reorder_slots[ro_slot_lbl]
-            # Get current list for that slot
             if ro_sid=="_depth":
-                cur_list=st.session_state.depth
+                cur_list=list(st.session_state.depth)
             else:
-                cur_list=st.session_state.slot_map.get(ro_sid,[])
-            ro_player_opts=[f"#{i+1} {p['Player']}" for i,p in enumerate(cur_list)]
+                cur_list=list(st.session_state.slot_map.get(ro_sid,[]))
+            ro_player_opts=[f"#{i+1} {'[NS] '+p.get('_ns_label','NEW SIGNING') if p.get('_is_ns') else p['Player']}" for i,p in enumerate(cur_list)]
             ro_player_sel=st.selectbox("Player to move",ro_player_opts,key="ro_player",label_visibility="visible")
             ro_idx=ro_player_opts.index(ro_player_sel)
         with ro_c2:
@@ -1444,17 +1490,15 @@ if all_on:
             rc1,rc2=st.columns(2)
             with rc1:
                 if st.button("⬆ Move Up",key="ro_up") and ro_idx>0:
-                    lst=list(cur_list)
-                    lst[ro_idx-1],lst[ro_idx]=lst[ro_idx],lst[ro_idx-1]
-                    if ro_sid=="_depth": st.session_state.depth=lst
-                    else: st.session_state.slot_map[ro_sid]=lst
+                    cur_list[ro_idx-1],cur_list[ro_idx]=cur_list[ro_idx],cur_list[ro_idx-1]
+                    if ro_sid=="_depth": st.session_state.depth=cur_list
+                    else: st.session_state.slot_map[ro_sid]=cur_list
                     st.rerun()
             with rc2:
                 if st.button("⬇ Move Down",key="ro_dn") and ro_idx<len(cur_list)-1:
-                    lst=list(cur_list)
-                    lst[ro_idx],lst[ro_idx+1]=lst[ro_idx+1],lst[ro_idx]
-                    if ro_sid=="_depth": st.session_state.depth=lst
-                    else: st.session_state.slot_map[ro_sid]=lst
+                    cur_list[ro_idx],cur_list[ro_idx+1]=cur_list[ro_idx+1],cur_list[ro_idx]
+                    if ro_sid=="_depth": st.session_state.depth=cur_list
+                    else: st.session_state.slot_map[ro_sid]=cur_list
                     st.rerun()
             st.markdown(f"<div style='font-size:9px;color:#4b5563;margin-top:6px;'>Position {ro_idx+1} of {len(cur_list)}<br>1st player = starter shown bold</div>",
                         unsafe_allow_html=True)
@@ -1469,28 +1513,43 @@ if all_on:
     with ns_c1:
         ns_slot_sel=st.selectbox("Slot",list(ns_slot_opts.keys()),key="ns_slot_sel",label_visibility="visible")
         ns_sid=ns_slot_opts[ns_slot_sel]
-        ns_existing=st.session_state.get("new_signing",{}).get(ns_sid)
-        ns_on=bool(ns_existing)
+        # Count existing NS entries in this slot
+        _cur_ns_in_slot=[p for p in st.session_state.slot_map.get(ns_sid,[]) if p.get("_is_ns")]
+        st.markdown(f"<div style='font-size:9px;color:#4b5563;margin-top:4px;'>{len(_cur_ns_in_slot)} signing(s) in this slot</div>",unsafe_allow_html=True)
     with ns_c2:
-        _def_lbl=ns_existing.get("label","NEW SIGNING") if ns_existing else "NEW SIGNING"
-        _def_sub=ns_existing.get("sub","") if ns_existing else ""
-        ns_lbl_val=st.text_input("Label (caps)",_def_lbl,key="ns_lbl_val",
+        ns_lbl_val=st.text_input("Label (caps)","NEW SIGNING",key="ns_lbl_val",
                                   help="e.g. NEW SIGNING, TARGET, TRIALIST")
-        ns_sub_val=st.text_input("Subtitle (optional)",_def_sub,key="ns_sub_val",
+        ns_sub_val=st.text_input("Subtitle (optional)","",key="ns_sub_val",
                                   help="e.g. Wide Creator U23")
-        _def_col=ns_existing.get("color","#ef4444") if ns_existing else "#ef4444"
         ns_col_val=st.selectbox("Colour",["#ef4444","#f97316","#eab308"],
-                                 index=["#ef4444","#f97316","#eab308"].index(_def_col) if _def_col in ["#ef4444","#f97316","#eab308"] else 0,
+                                 index=0,
                                  format_func=lambda x:{"#ef4444":"Red","#f97316":"Orange","#eab308":"Yellow"}[x],
                                  key="ns_col_val")
-    ns_btn_lbl="✅ Showing — click to remove" if ns_on else "🟠 Add to slot"
-    if st.button(ns_btn_lbl,key="ns_toggle_btn"):
-        ns_dict=st.session_state.setdefault("new_signing",{})
-        if ns_on:
-            ns_dict.pop(ns_sid,None)
-        else:
-            ns_dict[ns_sid]={"label":ns_lbl_val.strip() or "NEW SIGNING","sub":ns_sub_val.strip(),"color":ns_col_val}
-        st.session_state.new_signing=ns_dict; st.rerun()
+    if st.button("🟠 Add to slot",key="ns_add_btn"):
+        ns_entry={"_is_ns":True,"Player":"","_key":f"_ns_{ns_sid}_{len(_cur_ns_in_slot)}",
+                  "_ns_label":ns_lbl_val.strip() or "NEW SIGNING",
+                  "_ns_sub":ns_sub_val.strip(),"_ns_color":ns_col_val,
+                  "Position":"","Minutes played":0,"Goals":0,"Assists":0,
+                  "Contract expires":"","On Loan":"no","Loaned Out":"no","Youth Player":"no"}
+        st.session_state.slot_map.setdefault(ns_sid,[]).append(ns_entry); st.rerun()
+
+    # Show existing NS entries for the selected slot — they're now reorderable via REORDER section above
+    _cur_ns_display=[p for p in st.session_state.slot_map.get(ns_sid,[]) if p.get("_is_ns")]
+    if _cur_ns_display:
+        st.markdown("<div style='font-size:9px;color:#6b7280;letter-spacing:.1em;margin-top:8px;margin-bottom:4px;'>SIGNINGS IN THIS SLOT — remove</div>",unsafe_allow_html=True)
+        st.markdown("<div style='font-size:8px;color:#374151;margin-bottom:4px;'>Use REORDER section above to move signings up/down among players</div>",unsafe_allow_html=True)
+        for _ni,_sn in enumerate(_cur_ns_display):
+            _lbl=_sn.get("_ns_label","NEW SIGNING")
+            _sub=_sn.get("_ns_sub","")
+            _disp=f"{_ni+1}. {_lbl}" + (f" — {_sub}" if _sub else "")
+            _nc1,_nc2=st.columns([4,1])
+            with _nc1:
+                st.markdown(f"<div style='font-size:10px;color:#c084fc;padding-top:6px;'>{_disp}</div>",unsafe_allow_html=True)
+            with _nc2:
+                if st.button("🗑",key=f"ns_rm_{ns_sid}_{_ni}"):
+                    pk=_sn.get("_key")
+                    st.session_state.slot_map[ns_sid]=[x for x in st.session_state.slot_map[ns_sid] if x.get("_key")!=pk]
+                    st.rerun()
 
 
 # ── Full squad ─────────────────────────────────────────────────────────────────
