@@ -1193,13 +1193,13 @@ with st.sidebar:
     st.markdown("---")
     if st.session_state.df is not None:
         df=st.session_state.df
-        lgs=["All"]+sorted(df["League"].unique())
+        lgs=["All"]+sorted(df["League"].dropna().unique())
         lg=st.selectbox("League",lgs)
         fdf=df if lg=="All" else df[df["League"]==lg]
         max_mins=int(df["Minutes played"].max()) if "Minutes played" in df.columns else 5000
         min_mins=st.slider("Min minutes played",0,max_mins,0,50)
         fdf=fdf[fdf["Minutes played"]>=min_mins]
-        sel_team=st.selectbox("Team",sorted(fdf["Team"].unique()))
+        sel_team=st.selectbox("Team",sorted(fdf["Team"].dropna().unique()))
         formation=st.selectbox("Formation",list(FORMATIONS.keys()))
 
         st.markdown("---")
