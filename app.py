@@ -1122,15 +1122,18 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**DATA**")
 
-    # ── Preloaded datasets ─────────────────────────────────────────────────────
+    # ── CSV selector — any CSV in repo, sorted by most recently modified ─────
     import os
-    PRELOADED = {
-        "— Select a dataset —": None,
-        "EFL & Scotland (Feb 26)": "EFLSCOTFEB26.csv",
-        "World (Jan 26)":          "WORLDaJan26.csv",
-    }
-    preset_choice = st.selectbox("Preloaded dataset", list(PRELOADED.keys()), key="preset_choice")
-    st.markdown("<div style='text-align:center;font-size:9px;color:#4b5563;margin:4px 0;'>— or —</div>",
+    from pathlib import Path as _Path
+    _repo_csvs = sorted(_Path.cwd().glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+    _csv_names = [f.name for f in _repo_csvs]
+    if _csv_names:
+        preset_choice = st.selectbox("Select dataset", _csv_names, index=0, key="preset_choice")
+        PRELOADED = {n: n for n in _csv_names}
+    else:
+        preset_choice = None
+        PRELOADED = {}
+    st.markdown("<div style='text-align:center;font-size:9px;color:#4b5563;margin:4px 0;'>— or upload —</div>",
                 unsafe_allow_html=True)
     uploaded = st.file_uploader("Upload CSV", type=["csv"])
 
@@ -1160,10 +1163,11 @@ with st.sidebar:
         _active_source = ("upload", uploaded)
     elif preset_choice and PRELOADED.get(preset_choice):
         _csv_path = PRELOADED[preset_choice]
-        if os.path.exists(_csv_path):
-            _active_source = ("preset", _csv_path)
+        _full_path = str(_Path.cwd() / _csv_path)
+        if os.path.exists(_full_path):
+            _active_source = ("preset", _full_path)
         else:
-            st.warning(f"⚠ {_csv_path} not found — place it alongside app.py")
+            st.warning(f"⚠ {_csv_path} not found in repo root")
 
     # Track which source is loaded so we reset scores when it changes
     _src_key = (uploaded.name if uploaded else None) or preset_choice
