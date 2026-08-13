@@ -1122,13 +1122,25 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**DATA**")
 
-    # ── CSV selector — any CSV in repo, sorted by most recently modified ─────
+    # ── CSV selector — any CSV in repo, ordered by SEASON (not mtime) ────────
     import os
     from pathlib import Path as _Path
+
+    def _season_key(name):
+        """First 4-digit year anywhere in the filename: 2026-27WORLDFULL.csv -> 2026.
+        Duplicated per repo rather than imported — separate repos, no shared
+        package. Mirrors season_utils.py in Scouting-Hub."""
+        m = re.search(r"(\d{4})", str(name))
+        return int(m.group(1)) if m else -1
+
     # Player-only: filtered to *WORLDFULL.csv specifically — this app crashes
     # with an unguarded KeyError (df["Position"], df["Player"]) if a
     # WORLDTEAMS*.csv file loads by default, which has neither column.
-    _repo_csvs = sorted(_Path.cwd().glob("*WORLDFULL.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+    #
+    # Season from the filename, not st_mtime. mtime was inverted: split_seasons.py
+    # writes seasons newest-first and copy2 preserves those timestamps, so
+    # 2026-27WORLDFULL.csv had the OLDEST mtime and this defaulted to 2024-25.
+    _repo_csvs = sorted(_Path.cwd().glob("*WORLDFULL.csv"), key=lambda f: _season_key(f.name), reverse=True)
     _csv_names = [f.name for f in _repo_csvs]
     if _csv_names:
         preset_choice = st.selectbox("Select dataset", _csv_names, index=0, key="preset_choice")
