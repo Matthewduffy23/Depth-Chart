@@ -4,6 +4,7 @@ pip install streamlit pandas numpy
 streamlit run app.py
 """
 import re
+import hashlib
 from datetime import date
 import numpy as np
 import pandas as pd
@@ -1107,6 +1108,425 @@ document.fonts.ready.then(function(){{
 }});
 </script></body></html>"""
 
+# ── Server-side PNG render (Mobile view only) ────────────────────────────────
+# The HTML downloads above need a desktop browser: html2canvas has to run, and on
+# iPad/iPhone Safari just shows an "Open with" prompt with nothing to open. So when
+# Mobile view is on we re-render the very same pitch layout server-side with
+# matplotlib and hand back a real PNG. Desktop's HTML/html2canvas route is untouched.
+from io import BytesIO
+
+_MPL_OK=True
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as _plt
+    from matplotlib.patches import Rectangle as _Rect, Ellipse as _Ell, FancyBboxPatch as _FBox
+    from matplotlib import font_manager as _fm
+except Exception:                      # matplotlib missing → PNG button hides itself
+    _MPL_OK=False
+
+def _png_font()->str:
+    """Montserrat if the host has it, otherwise whatever sans is installed."""
+    if not _MPL_OK: return "sans-serif"
+    try: have={f.name for f in _fm.fontManager.ttflist}
+    except Exception: return "sans-serif"
+    for n in ("Montserrat","DejaVu Sans","Liberation Sans","Arial"):
+        if n in have: return n
+    return "sans-serif"
+
+def _mpl_col(c:str)->str:
+    """score_to_color() emits rgb(r,g,b); matplotlib wants hex."""
+    m=re.match(r"rgb\((\d+),\s*(\d+),\s*(\d+)\)",str(c))
+    if m: return "#{:02x}{:02x}{:02x}".format(*[int(g) for g in m.groups()])
+    return c
+
+def _mpl_w(v):
+    """CSS numeric weight → a weight DejaVu/Montserrat can actually render."""
+    try: return "bold" if int(v)>=600 else "normal"
+    except Exception: return v
+
+class _PngCanvas:
+    """CSS-pixel drawing surface: origin top-left, 1 unit = 1 CSS px, saved at `scale`×."""
+    def __init__(self,w,h,scale,bg,font):
+        self.w=float(w); self.h=float(h); self.S=float(scale); self.font=font; self.bg=bg
+        self.fig=_plt.figure(figsize=(self.w/100.0,self.h/100.0),dpi=100*self.S)
+        self.fig.patch.set_facecolor(bg)
+        self.ax=self.fig.add_axes([0,0,1,1])
+        self.ax.set_xlim(0,self.w); self.ax.set_ylim(self.h,0)
+        self.ax.set_facecolor(bg); self.ax.axis("off")
+        self.r=self.fig.canvas.get_renderer()
+
+    def set_height(self,h):
+        self.h=float(h)
+        self.fig.set_size_inches(self.w/100.0,self.h/100.0)
+        self.ax.set_ylim(self.h,0)
+        self.r=self.fig.canvas.get_renderer()
+
+    def text(self,x,y,s,px,color="#ffffff",weight="normal",ha="center",va="center",z=10,alpha=1.0):
+        return self.ax.text(x,y,s,fontsize=px*0.72,color=_mpl_col(color),fontweight=_mpl_w(weight),
+                            ha=ha,va=va,family=self.font,zorder=z,alpha=alpha)
+
+    def tw(self,s,px,weight="normal")->float:
+        """Rendered width of `s` in CSS px (font metrics don't depend on figure size)."""
+        if not s: return 0.0
+        t=self.ax.text(0,0,s,fontsize=px*0.72,fontweight=_mpl_w(weight),family=self.font)
+        try: w=t.get_window_extent(self.r).width/self.S
+        except Exception: w=len(str(s))*px*0.55
+        t.remove(); return float(w)
+
+    def rect(self,x,y,w,h,fc="none",ec="none",lw=1.0,z=1,alpha=1.0,radius=0):
+        if radius>0:
+            p=_FBox((x+radius,y+radius),max(w-2*radius,0.1),max(h-2*radius,0.1),
+                    boxstyle=f"round,pad={radius},rounding_size={radius}",
+                    facecolor=_mpl_col(fc) if fc!="none" else "none",
+                    edgecolor=_mpl_col(ec) if ec!="none" else "none",
+                    linewidth=lw*0.72,alpha=alpha,zorder=z)
+        else:
+            p=_Rect((x,y),w,h,facecolor=_mpl_col(fc) if fc!="none" else "none",
+                    edgecolor=_mpl_col(ec) if ec!="none" else "none",
+                    linewidth=lw*0.72,alpha=alpha,zorder=z)
+        self.ax.add_patch(p); return p
+
+    def line(self,x1,y1,x2,y2,color="#9ca3af",lw=1.0,z=1,alpha=1.0):
+        self.ax.plot([x1,x2],[y1,y2],color=_mpl_col(color),linewidth=lw*0.72,
+                     alpha=alpha,zorder=z,solid_capstyle="butt")
+
+    def ellipse(self,cx,cy,rx,ry,ec="#9ca3af",fc="none",lw=1.0,z=1,alpha=1.0):
+        e=_Ell((cx,cy),2*rx,2*ry,facecolor=_mpl_col(fc) if fc!="none" else "none",
+               edgecolor=_mpl_col(ec) if ec!="none" else "none",
+               linewidth=lw*0.72,alpha=alpha,zorder=z)
+        self.ax.add_patch(e); return e
+
+    def png(self)->bytes:
+        buf=BytesIO()
+        self.fig.savefig(buf,format="png",facecolor=self.bg)
+        _plt.close(self.fig); buf.seek(0); return buf.getvalue()
+
+def render_pitch_png(
+    team:str, league:str, formation:str,
+    slots:list, slot_map:dict, depth:list, df_sc,
+    show_mins:bool, show_goals:bool, show_assists:bool,
+    show_positions:bool, show_roles:bool, xi_only:bool, canva:bool,
+    pitch_width_px:int=700,
+    white_names:bool=False,
+    show_contracts:bool=True,
+    best_role_only:bool=False,
+    esc_blue:bool=False,
+    scale:float=2.0,
+)->bytes:
+    """Matplotlib twin of render_pitch(): same slots, same players, same colours.
+
+    Emoji are swapped for ASCII (⚽→G, 🅰→A, 🔁→*) because the fonts available on
+    Streamlit Cloud have no emoji glyphs — the legend says the same thing.
+    """
+    BG="#0a0f1c"; FONT=_png_font()
+    _hpo=st.session_state.get("hide_pos_override",set())
+    _hop=st.session_state.get("hide_oop_players",set())
+
+    # ── per-player bits (mirrors make_node) ───────────────────────────────────
+    def p_color(p)->str:
+        if white_names: return "#ffffff"
+        return player_css_color(contract_years(p.get("Contract expires","")),is_loan(p),
+                                is_loaned_out(p),is_youth(p),is_esc(p),esc_blue)
+
+    def p_suffix(p)->str:
+        yrs=contract_years(p.get("Contract expires","")); yr_str=f"+{yrs}" if yrs>=0 else "+?"
+        multi=" *" if _multi_role(p.get("Position","")) else ""
+        oop=(f" ({p['_primary_pos']})" if (p.get("_show_pos") and p.get("_key","") not in _hpo
+             and p.get("_key","") not in _hop) else "")
+        if is_loan(p):
+            return f" L{oop}{multi}" if show_contracts else f"{oop}{multi}"
+        return f"{(yr_str if show_contracts else '')}{oop}{multi}"
+
+    def p_stats(p)->str:
+        parts=[]
+        if show_mins: parts.append(f"{int(float(p.get('Minutes played') or 0))}′")
+        if show_goals:
+            g=float(p.get("Goals") or 0)
+            if g>0: parts.append(f"{int(g)}G")
+        if show_assists:
+            a=float(p.get("Assists") or 0)
+            if a>0: parts.append(f"{int(a)}A")
+        return " ".join(parts)
+
+    def p_roles(p,best_only:bool)->list:
+        """[(role, score, name_colour, score_colour, is_best)] — as all/best_role_html."""
+        if df_sc is None or getattr(df_sc,"empty",True): return []
+        rows=df_sc[df_sc["Player"]==p.get("Player","")]
+        if rows.empty: return []
+        row=rows.iloc[0]; rk=_role_key(p.get("Position",""))
+        scores={}
+        for rn in ROLE_BUCKETS.get(rk,{}):
+            v=row.get(f"_rs_{rn}",np.nan)
+            if isinstance(v,(int,float)) and not np.isnan(float(v)): scores[rn]=float(v)
+        if not scores: return []
+        best=max(scores,key=scores.get)
+        if best_only:
+            return [(best,scores[best],"#7a8494",score_to_color(scores[best]),True)]
+        out=[]
+        for rn,sc in sorted(scores.items(),key=lambda x:-x[1]):
+            c=score_to_color(sc); b=(rn==best)
+            out.append((rn,sc,c if b else "#7a8494",c,b))
+        return out
+
+    def wrap(cv,s,px,weight,maxw)->list:
+        """Word-wrap like the CSS max-width cap on edge nodes."""
+        if maxw<=0 or cv.tw(s,px,weight)<=maxw: return [s]
+        words=str(s).split(" "); out=[]; cur=""
+        for w in words:
+            trial=(cur+" "+w).strip()
+            if cur and cv.tw(trial,px,weight)>maxw: out.append(cur); cur=w
+            else: cur=trial
+        if cur: out.append(cur)
+        return out or [s]
+
+    # ── node block: list of (height, draw(cv, x_anchor, y_top)) ───────────────
+    def node_block(cv,slot,bsz,nsz,ssz,rsz,ta,badge_style,name_maxw=0.0,zbase=10):
+        """Build one slot's stack as [(height, draw(cv, x_anchor, y_top)), ...].
+
+        Role lines share the node's content width so the scores line up in a column,
+        exactly like the flex `justify-content:space-between` rows do in the HTML.
+        """
+        lines=[]; widths=[]; nodew=[0.0]
+        def gap(h): lines.append((h,None))
+        def txt(s,px,color,weight,lh=1.45,align=None):
+            h=px*lh; a=align or ta; widths.append(cv.tw(s,px,weight))
+            def d(c,x,y,_s=s,_px=px,_c=color,_w=weight,_h=h,_a=a):
+                c.text(x,y+_h/2.0,_s,_px,_c,_w,ha=_a,va="center",z=zbase+1)
+            lines.append((h,d))
+        def role(rn,sc,cn,cs,px,minw,lh=1.4):
+            h=px*lh; wt="bold" if cn!="#7a8494" else "normal"; sv=str(int(sc))
+            widths.append(cv.tw(rn,px,wt)+6+cv.tw(sv,px,"bold"))
+            def d(c,x,y,_rn=rn,_sv=sv,_cn=cn,_cs=cs,_px=px,_h=h,_mw=minw,_wt=wt):
+                tot=max(_mw,nodew[0])
+                left=x if ta=="left" else (x-tot if ta=="right" else x-tot/2.0)
+                c.text(left,y+_h/2.0,_rn,_px,_cn,_wt,ha="left",va="center",z=zbase+1)
+                c.text(left+tot,y+_h/2.0,_sv,_px,_cs,"bold",ha="right",va="center",z=zbase+1)
+            lines.append((h,d))
+
+        # slot badge
+        if badge_style=="portrait":
+            bh=bsz*1.2+4+4                                   # padding 2px + border 2px
+            bw=cv.tw(slot["label"],bsz,"bold")+16+4
+            def dbadge(c,x,y,_l=slot["label"],_px=bsz,_h=bh,_w=bw):
+                left=x-_w/2.0 if ta=="center" else (x if ta=="left" else x-_w)
+                c.rect(left,y,_w,_h,fc="#0a0f1c",ec="#ef4444",lw=2,z=zbase,alpha=.97)
+                c.text(left+_w/2.0,y+_h/2.0,_l,_px,"#ef4444","bold",ha="center",va="center",z=zbase+1)
+            lines.append((bh,dbadge)); gap(3)
+        else:
+            bh=bsz*1.2+6
+            bw=cv.tw(slot["label"],bsz,"bold")+24
+            def dbadge(c,x,y,_l=slot["label"],_px=bsz,_h=bh,_w=bw):
+                left=x-_w/2.0 if ta=="center" else (x if ta=="left" else x-_w)
+                c.rect(left,y,_w,_h,fc="#b8bfc9",lw=0,z=zbase,radius=8)
+                c.text(left+_w/2.0,y+_h/2.0,_l,_px,"#1f2937","bold",ha="center",va="center",z=zbase+1)
+            lines.append((bh,dbadge)); gap(5)
+        widths.append(bw)
+
+        ps_all=slot_map.get(slot["id"],[])
+        ps=ps_all[:1] if xi_only else ps_all
+        started=False; real=0
+        for p in ps:
+            if p.get("_is_ns"):
+                col=p.get("_ns_color","#ef4444")
+                if started: gap(4)
+                txt((p.get("_ns_label") or "NEW SIGNING").upper(),nsz,col,"bold",1.4)
+                if p.get("_ns_sub"): txt(p["_ns_sub"],rsz,col,"normal",1.3)
+                started=True
+                continue
+            ri=real; real+=1
+            if started: gap(5)
+            col=p_color(p); fw="bold" if ri==0 else "normal"
+            full=f'{p["Player"]} {p_suffix(p)}' if badge_style=="portrait" else f'{p["Player"]}{p_suffix(p)}'
+            for ln in wrap(cv,full,nsz,fw,name_maxw):
+                txt(ln,nsz,col,fw,1.45)
+            if badge_style=="portrait":
+                allp=", ".join(_all_toks(p.get("Position","")))
+                if show_positions and allp: txt(allp,ssz,"#9ca3af","normal",1.2)
+                sh=p_stats(p)
+                if sh: txt(sh,ssz,"#ffffff","normal",1.2)
+            if show_roles:
+                rl=p_roles(p,best_role_only or ri>0)
+                if rl: gap(2)
+                for rn,sc,cn,cs,_b in rl:
+                    role(rn,sc,cn,cs,rsz,90 if badge_style=="portrait" else 110)
+            started=True
+        if not started:
+            txt("—",ssz,"#1f2937" if badge_style=="portrait" else "#4b5563","normal",1.2)
+        # node width = widest line, min-width 80 / max-width 115 on portrait edge nodes
+        w=max(widths) if widths else 0.0
+        if badge_style=="portrait":
+            w=max(80.0,w)
+            if name_maxw>0: w=min(w,name_maxw)
+        nodew[0]=w
+        return lines
+
+    def draw_block(cv,lines,x,y_top):
+        y=y_top
+        for h,d in lines:
+            if d is not None: d(cv,x,y)
+            y+=h
+
+    def legend_tail()->str:
+        s=""
+        if show_mins:    s+=" · ′=mins"
+        if show_goals:   s+=" · G=goals"
+        if show_assists: s+=" · A=assists"
+        return s
+
+    LEGEND=[("Under Contract","#ffffff"),("Out of Contract","#ef4444"),("Final Year","#f59e0b"),
+            ("On Loan","#22c55e"),("Loaned Out","#c084fc"),("Youth","#9ca3af")]
+    if esc_blue: LEGEND=LEGEND+[("ESC","#60a5fa")]
+
+    # ── CANVA 1920×1080 ───────────────────────────────────────────────────────
+    if canva:
+        cv=_PngCanvas(CANVA_W,CANVA_H,scale,BG,FONT)
+        cv.rect(CPX,CPY,CPW,CPH,fc="#0d1820",lw=0,z=1,alpha=.6)
+        cv.rect(CPX,CPY,CPW,CPH,ec="#374151",lw=2,z=2)
+        ccx=CPX+CPW//2; ccy=CPY+CPH//2
+        cv.line(ccx,CPY,ccx,CPY+CPH,"#374151",1.5,z=2)
+        cv.ellipse(ccx,ccy,CP_CR,CP_CR,"#374151",lw=1.5,z=2)
+        cv.ellipse(ccx,ccy,5,5,"none","#374151",z=2)
+        pa_y=CPY+round((CPH-CP_PAH)/2); ga_y=CPY+round((CPH-CP_GAH)/2)
+        cv.rect(CPX,pa_y,CP_PAW,CP_PAH,ec="#374151",lw=1.5,z=2)
+        cv.rect(CPX,ga_y,CP_GAW,CP_GAH,ec="#374151",lw=1,z=2)
+        cv.ellipse(CPX+round(CPW*0.08),ccy,4,4,"none","#374151",z=2)
+        cv.rect(CPX+CPW-CP_PAW,pa_y,CP_PAW,CP_PAH,ec="#374151",lw=1.5,z=2)
+        cv.rect(CPX+CPW-CP_GAW,ga_y,CP_GAW,CP_GAH,ec="#374151",lw=1,z=2)
+        cv.ellipse(CPX+CPW-round(CPW*0.08),ccy,4,4,"none","#374151",z=2)
+
+        hy=16+21*0.65
+        cv.text(CPX,hy,f"Name + contract years{legend_tail()} · *=4+ positions",
+                21,"#6b7280","normal",ha="left",va="center",z=20)
+        cur=CPX+CPW
+        tail=[(f"{league} · {formation}","#6b7280","normal")]+ \
+             [(t,c,"bold") for t,c in reversed(LEGEND)]
+        for t,c,w in tail:
+            cv.text(cur,hy,t,21,c,w,ha="right",va="center",z=20)
+            cur-=cv.tw(t,21,w)+10
+
+        for si,s in enumerate(slots):
+            lx,ly,tx,ta=canva_slot_px(float(s["x"]),float(s["y"]),s["id"])
+            lines=node_block(cv,s,32,29,21,20,ta,"canva",zbase=20+si*4)
+            H=sum(h for h,_ in lines)
+            y=ly if tx.endswith(",0)") else (ly-H if tx.endswith(",-100%)") else ly-H/2.0)
+            draw_block(cv,lines,lx,y)
+        return cv.png()
+
+    # ── PORTRAIT ──────────────────────────────────────────────────────────────
+    W=float(pitch_width_px); PADX=4.0
+    fw=W-2*PADX; fh=fw*1.42
+    cv=_PngCanvas(W,fh+400,scale,BG,FONT)          # height fixed up once measured
+
+    title_h=20*1.25; head_h=9*1.3
+    field_y=title_h+4+head_h+4
+    y=field_y+fh
+
+    # depth strip
+    depth_rows=[]; card_h=0.0
+    if not xi_only and depth:
+        cards=[]
+        for p in depth:
+            yrs=contract_years(p.get("Contract expires","")); loan=is_loan(p)
+            dep_yr="L" if loan else (f"+{yrs}" if yrs>=0 else "+?")
+            multi="*" if _multi_role(p.get("Position","")) else ""
+            name=f'{p["Player"]} {dep_yr} {multi}'.strip()
+            pos=_tok(p.get("Position",""))
+            rl=p_roles(p,True) if show_roles else []
+            wneed=max(cv.tw(name,11,"bold"),cv.tw(pos,7,"normal"),
+                      (cv.tw(rl[0][0],8,"bold")+6+cv.tw(str(int(rl[0][1])),8,"bold")) if rl else 0)
+            cards.append({"name":name,"col":p_color(p),"pos":pos,"role":rl,
+                          "w":max(100.0,wneed+18)})
+        card_h=5+11*1.2+7*1.2+(2+8*1.4 if show_roles else 0)+5
+        row=[]; rw=0.0
+        for c in cards:
+            add=c["w"]+(6 if row else 0)
+            if row and rw+add>fw: depth_rows.append((row,rw)); row=[]; rw=0.0; add=c["w"]
+            row.append(c); rw+=add
+        if row: depth_rows.append((row,rw))
+        y+=10+1+8+9*1.25+6+len(depth_rows)*card_h+max(0,len(depth_rows)-1)*6
+
+    # legend bar
+    leg_line=f"Name + contract years{legend_tail()} · *=4+ positions"
+    leg_rows=[]; row=[]; rw=0.0
+    for t,c in LEGEND:
+        w=cv.tw(t,9,"bold"); add=w+(12 if row else 0)
+        if row and rw+add>fw: leg_rows.append((row,rw)); row=[]; rw=0.0; add=w
+        row.append((t,c,w)); rw+=add
+    if row: leg_rows.append((row,rw))
+    y+=6+8*1.25+4+len(leg_rows)*9*1.25
+    H=y+10
+    cv.set_height(H)
+
+    # header
+    cv.text(W/2.0,title_h/2.0,f"{team} Squad Depth".upper(),20,"#ffffff","bold",ha="center",va="center",z=20)
+    hy=title_h+4+head_h/2.0
+    cv.text(PADX,hy,str(league),9,"#6b7280","normal",ha="left",va="center",z=20)
+    cv.text(W-PADX,hy,str(formation),9,"#6b7280","normal",ha="right",va="center",z=20)
+
+    # pitch field + markings (PORTRAIT_SVG, viewBox 0 0 100 142, stretched)
+    cv.rect(PADX,field_y,fw,fh,fc=BG,ec="#1a2540",lw=1,z=1)
+    sx=fw/100.0; sy=fh/142.0; avg=(sx+sy)/2.0
+    X=lambda v:PADX+v*sx; Y=lambda v:field_y+v*sy
+    LC="#9ca3af"; OP=0.18
+    cv.rect(X(2),Y(2),96*sx,138*sy,ec=LC,lw=1.2*avg,z=2,alpha=OP)
+    cv.line(X(2),Y(71),X(98),Y(71),LC,0.8*avg,z=2,alpha=OP)
+    cv.ellipse(X(50),Y(71),10*sx,10*sy,LC,lw=0.8*avg,z=2,alpha=OP)
+    cv.ellipse(X(50),Y(71),1.2*sx,1.2*sy,"none",LC,z=2,alpha=OP)
+    cv.rect(X(22),Y(2),56*sx,18*sy,ec=LC,lw=0.8*avg,z=2,alpha=OP)
+    cv.rect(X(36),Y(2),28*sx,7*sy,ec=LC,lw=0.6*avg,z=2,alpha=OP)
+    cv.ellipse(X(50),Y(14),0.9*sx,0.9*sy,"none",LC,z=2,alpha=OP)
+    cv.rect(X(22),Y(122),56*sx,18*sy,ec=LC,lw=0.8*avg,z=2,alpha=OP)
+    cv.rect(X(36),Y(133),28*sx,7*sy,ec=LC,lw=0.6*avg,z=2,alpha=OP)
+    cv.ellipse(X(50),Y(126),0.9*sx,0.9*sy,"none",LC,z=2,alpha=OP)
+
+    # nodes
+    for si,s in enumerate(slots):
+        sxp=float(s.get("x",50)); is_edge=(sxp<20 or sxp>80)
+        lines=node_block(cv,s,15,14,9,8,"center","portrait",
+                         name_maxw=115.0 if is_edge else 0.0,zbase=20+si*4)
+        Hb=sum(h for h,_ in lines)
+        cy=field_y+float(s.get("y",50))/100.0*fh
+        draw_block(cv,lines,X(sxp),cy-Hb/2.0)
+
+    # depth strip
+    y=field_y+fh
+    if depth_rows:
+        y+=10
+        cv.line(PADX,y,W-PADX,y,"#1f2937",1,z=3)
+        y+=8
+        cv.text(W/2.0,y+9*1.25/2.0,"DEPTH",9,"#6b7280","bold",ha="center",va="center",z=10)
+        y+=9*1.25+6
+        for row,rw in depth_rows:
+            x=PADX+(fw-rw)/2.0
+            for c in row:
+                cv.rect(x,y,c["w"],card_h,fc="#0d1220",ec="#1f2937",lw=1,z=4)
+                cxm=x+c["w"]/2.0; ty=y+5
+                cv.text(cxm,ty+11*1.2/2.0,c["name"],11,c["col"],"bold",ha="center",va="center",z=6)
+                ty+=11*1.2
+                cv.text(cxm,ty+7*1.2/2.0,c["pos"],7,"#6b7280","normal",ha="center",va="center",z=6)
+                ty+=7*1.2
+                if c["role"]:
+                    rn,sc,cn,cs,_b=c["role"][0]; ty+=2
+                    tot=c["w"]-18; left=cxm-tot/2.0   # card inner width, as the flex row
+                    cv.text(left,ty+8*1.4/2.0,rn,8,cn,"normal",ha="left",va="center",z=6)
+                    cv.text(left+tot,ty+8*1.4/2.0,str(int(sc)),8,cs,"bold",ha="right",va="center",z=6)
+                x+=c["w"]+6
+            y+=card_h+6
+        y-=6
+
+    # legend bar
+    y+=6
+    cv.text(W/2.0,y+8*1.25/2.0,leg_line,8,"#6b7280","normal",ha="center",va="center",z=10)
+    y+=8*1.25+4
+    for row,rw in leg_rows:
+        x=PADX+(fw-rw)/2.0
+        for t,c,w in row:
+            cv.text(x,y+9*1.25/2.0,t,9,c,"bold",ha="left",va="center",z=10)
+            x+=w+12
+        y+=9*1.25
+    return cv.png()
+
 # ── Session state ──────────────────────────────────────────────────────────────
 for k,v in {"slot_map":{},"depth":[],"move_player":None,"df":None,"df_sc":None,
              "last_team":None,"last_formation":None,"edit_contract_player":None,
@@ -1381,7 +1801,7 @@ png_dl  = make_png_page(pitch, team_name, canva, PORTRAIT_W)
 
 if _mobile:
     mob_dl = make_mobile_html_page(pitch, team_name)
-    dl1,dl2,dl3,_=st.columns([1,1,1,1])
+    dl1,dl2,dl3,dl4=st.columns([1,1,1,1])
 else:
     dl1,dl2,_=st.columns([1,1,4])
 with dl1:
@@ -1396,6 +1816,41 @@ if _mobile:
         st.download_button("\u2b07 Mobile HTML \U0001f4f1", mob_dl.encode("utf-8"),
             f"{team_name.replace(' ','_')}_mobile.html","text/html",
             help="Full-size pitch — open in Safari on iPhone")
+    # ── Real PNG, rendered server-side (mobile only) ───────────────────────
+    # Safari can't run the html2canvas page, so mobile gets actual image bytes.
+    # The rendered pitch HTML is a perfect cache key: it changes whenever the squad,
+    # the formation or any toggle changes, and nothing else does — so we only pay
+    # for a re-render when something actually moved.
+    with dl4:
+        if not _MPL_OK:
+            st.caption("PNG needs matplotlib")
+        else:
+            _png_sig=hashlib.md5((pitch+str(canva)).encode("utf-8")).hexdigest()
+            if st.session_state.get("_png_sig")!=_png_sig:
+                try:
+                    st.session_state["_png_bytes"]=render_pitch_png(
+                        team_name,league_nm,formation,slots,slot_map,depth,df_sc,
+                        _tog("show_mins",True),_tog("show_goals",True),_tog("show_assists",True),
+                        _tog("show_positions"),_tog("show_roles",True),_tog("xi_only"),canva,
+                        pitch_width_px=PORTRAIT_W,
+                        white_names=_tog("white_names"),
+                        show_contracts=_tog("show_contracts",True),
+                        best_role_only=_tog("best_role_only"),
+                        esc_blue=_tog("esc_blue"),
+                        scale=2.0,
+                    )
+                    st.session_state["_png_err"]=None
+                except Exception as _pe:
+                    st.session_state["_png_bytes"]=None
+                    st.session_state["_png_err"]=str(_pe)
+                st.session_state["_png_sig"]=_png_sig
+            _png_bytes=st.session_state.get("_png_bytes")
+            if _png_bytes:
+                st.download_button("⬇ PNG 📱", _png_bytes,
+                    f"{team_name.replace(' ','_')}_squad_depth.png","image/png",
+                    help="Real image — saves straight to Photos on iPad/iPhone")
+            else:
+                st.caption(f"PNG failed: {st.session_state.get('_png_err')}")
 
 # ── Move / Remove / Edit Contract / Reorder ───────────────────────────────────
 st.markdown("---")
