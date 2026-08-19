@@ -288,6 +288,44 @@ FORMATIONS:dict[str,list[dict]]={
 
 PITCH_ORDER=["GK","LCB","CB","RCB","LB","RB","LWB","RWB","CM","DM","AM","LW","RW","ST"]
 
+# ── Wide-slot edge guard ──────────────────────────────────────────────────────
+# Portrait nodes are centred on their slot's x%, and an edge node's text block is
+# capped at EDGE_NODE_MAX_W (see the max-width in render_pitch's make_node and the
+# name_maxw passed in render_pitch_png). A slot centred less than half that width
+# inside the touchline therefore has its name, minutes and role scores crossing the
+# pitch border — 4-4-2's wingers sat at x=5/95, well outside it.
+#
+# Clamping the slot list is the one place both renderers inherit: the HTML render
+# and the PNG render are handed the same list, so neither needs its own guard.
+EDGE_NODE_MAX_W = 115.0   # px — portrait edge-node max-width
+EDGE_NODE_MARGIN = 20.0   # px — breathing room between the text block and the line.
+                          # Sized so the guard lands at x≈11.2%, which matches how far
+                          # inside the already-fine slots sit (LB/RB at 12/88 keep ~25px)
+                          # and leaves them untouched. Raising it past ~25 would start
+                          # moving those too — keep min_slot_x() ≤ 12.
+PITCH_SIDE_PAD = 4.0      # px — #pitch-root's own left/right padding
+
+def min_slot_x(pitch_width_px: float = 700.0) -> float:
+    """Smallest x% whose node still clears the touchline at this pitch width."""
+    field_w = max(float(pitch_width_px) - 2 * PITCH_SIDE_PAD, 1.0)
+    return 100.0 * (EDGE_NODE_MAX_W / 2.0 + EDGE_NODE_MARGIN) / field_w
+
+def layout_slots(formation: str, pitch_width_px: float = 700.0) -> list:
+    """FORMATIONS[formation] with any over-wide slot pulled back inside the pitch.
+
+    Returns the original dicts untouched where nothing needs moving, so formations
+    that already sit inside the safe band (4-2-3-1, 4-3-3, the 3-5-2 wingbacks …)
+    render exactly as before.
+    """
+    lo = min_slot_x(pitch_width_px)
+    hi = 100.0 - lo
+    out = []
+    for sl in FORMATIONS.get(formation, []):
+        x = float(sl.get("x", 50))
+        nx = min(max(x, lo), hi)
+        out.append(sl if nx == x else dict(sl, x=round(nx, 2)))
+    return out
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def contract_years(s)->int:
     s=str(s or "").strip()
@@ -1739,14 +1777,14 @@ if st.session_state.df is not None and team_name:
     if not tdf2.empty and "League" in tdf2.columns:
         league_nm=tdf2["League"].iloc[0]
 
-slots=FORMATIONS[formation]; slot_map=st.session_state.slot_map
-depth=st.session_state.depth; df_sc=st.session_state.df_sc
-canva=_tog("canva_mode")
-
 # Estimate the portrait pitch pixel width from Streamlit's main column
 # Streamlit wide layout main area ≈ 1140px; subtracting sidebar (300px) → ~840px usable
 # We use 560px as a conservative portrait width (matches typical Streamlit narrow render)
 PORTRAIT_W=700
+
+slots=layout_slots(formation, PORTRAIT_W); slot_map=st.session_state.slot_map
+depth=st.session_state.depth; df_sc=st.session_state.df_sc
+canva=_tog("canva_mode")
 
 pitch=render_pitch(
     team_name,league_nm,formation,slots,slot_map,depth,df_sc,
