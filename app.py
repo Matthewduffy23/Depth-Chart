@@ -1801,7 +1801,7 @@ png_dl  = make_png_page(pitch, team_name, canva, PORTRAIT_W)
 
 if _mobile:
     mob_dl = make_mobile_html_page(pitch, team_name)
-    dl1,dl2,dl3,dl4=st.columns([1,1,1,1])
+    dl1,dl2,dl3,_=st.columns([1,1,1,1])
 else:
     dl1,dl2,_=st.columns([1,1,4])
 with dl1:
@@ -1821,36 +1821,44 @@ if _mobile:
     # The rendered pitch HTML is a perfect cache key: it changes whenever the squad,
     # the formation or any toggle changes, and nothing else does — so we only pay
     # for a re-render when something actually moved.
-    with dl4:
-        if not _MPL_OK:
-            st.caption("PNG needs matplotlib")
-        else:
-            _png_sig=hashlib.md5((pitch+str(canva)).encode("utf-8")).hexdigest()
-            if st.session_state.get("_png_sig")!=_png_sig:
-                try:
-                    st.session_state["_png_bytes"]=render_pitch_png(
-                        team_name,league_nm,formation,slots,slot_map,depth,df_sc,
-                        _tog("show_mins",True),_tog("show_goals",True),_tog("show_assists",True),
-                        _tog("show_positions"),_tog("show_roles",True),_tog("xi_only"),canva,
-                        pitch_width_px=PORTRAIT_W,
-                        white_names=_tog("white_names"),
-                        show_contracts=_tog("show_contracts",True),
-                        best_role_only=_tog("best_role_only"),
-                        esc_blue=_tog("esc_blue"),
-                        scale=2.0,
-                    )
-                    st.session_state["_png_err"]=None
-                except Exception as _pe:
-                    st.session_state["_png_bytes"]=None
-                    st.session_state["_png_err"]=str(_pe)
-                st.session_state["_png_sig"]=_png_sig
-            _png_bytes=st.session_state.get("_png_bytes")
-            if _png_bytes:
-                st.download_button("⬇ PNG 📱", _png_bytes,
+    #
+    # The image, not the download button, is the primary way out on iPad: tapping
+    # a download navigates the whole tab to Safari's file preview, and coming back
+    # reloads the app and loses your place. Long-pressing the image below saves
+    # straight to Photos without ever leaving the page. Same bytes for both.
+    if not _MPL_OK:
+        st.caption("PNG needs matplotlib")
+    else:
+        _png_sig=hashlib.md5((pitch+str(canva)).encode("utf-8")).hexdigest()
+        if st.session_state.get("_png_sig")!=_png_sig:
+            try:
+                st.session_state["_png_bytes"]=render_pitch_png(
+                    team_name,league_nm,formation,slots,slot_map,depth,df_sc,
+                    _tog("show_mins",True),_tog("show_goals",True),_tog("show_assists",True),
+                    _tog("show_positions"),_tog("show_roles",True),_tog("xi_only"),canva,
+                    pitch_width_px=PORTRAIT_W,
+                    white_names=_tog("white_names"),
+                    show_contracts=_tog("show_contracts",True),
+                    best_role_only=_tog("best_role_only"),
+                    esc_blue=_tog("esc_blue"),
+                    scale=2.0,
+                )
+                st.session_state["_png_err"]=None
+            except Exception as _pe:
+                st.session_state["_png_bytes"]=None
+                st.session_state["_png_err"]=str(_pe)
+            st.session_state["_png_sig"]=_png_sig
+        _png_bytes=st.session_state.get("_png_bytes")
+        if _png_bytes:
+            with st.expander("📥 Get PNG — long-press the image to save", expanded=False):
+                st.image(_png_bytes, width="stretch")
+                st.caption("Long-press the image → **Add to Photos**. Stays on this page, "
+                           "so you keep your squad exactly as it is.")
+                st.download_button("⬇ Download the file instead", _png_bytes,
                     f"{team_name.replace(' ','_')}_squad_depth.png","image/png",
-                    help="Real image — saves straight to Photos on iPad/iPhone")
-            else:
-                st.caption(f"PNG failed: {st.session_state.get('_png_err')}")
+                    help="Safari opens this in its own preview tab — going back reloads the app")
+        else:
+            st.caption(f"PNG failed: {st.session_state.get('_png_err')}")
 
 # ── Move / Remove / Edit Contract / Reorder ───────────────────────────────────
 st.markdown("---")
